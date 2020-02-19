@@ -56,12 +56,16 @@ SOURCES       = src/board.cpp \
 		src/bonus.cpp \
 		src/spot.cpp \
 		src/test_board.cpp \
-		src/letterbag.cpp 
+		src/letterbag.cpp \
+		src/letterspecs.cpp \
+		src/playerbag.cpp 
 OBJECTS       = obj/board.o \
 		obj/bonus.o \
 		obj/spot.o \
 		obj/test_board.o \
-		obj/letterbag.o
+		obj/letterbag.o \
+		obj/letterspecs.o \
+		obj/playerbag.o
 DIST          = /Users/maximeolivie/Qt/5.14.1/clang_64/mkspecs/features/spec_pre.prf \
 		/Users/maximeolivie/Qt/5.14.1/clang_64/mkspecs/qdevice.pri \
 		/Users/maximeolivie/Qt/5.14.1/clang_64/mkspecs/features/device_config.prf \
@@ -267,11 +271,15 @@ DIST          = /Users/maximeolivie/Qt/5.14.1/clang_64/mkspecs/features/spec_pre
 		LIFAP6_Projet.pro src/board.hpp \
 		src/bonus.hpp \
 		src/spot.hpp \
-		src/letterbag.hpp src/board.cpp \
+		src/letterbag.hpp \
+		src/letterspecs.hpp \
+		src/playerbag.hpp src/board.cpp \
 		src/bonus.cpp \
 		src/spot.cpp \
 		src/test_board.cpp \
-		src/letterbag.cpp
+		src/letterbag.cpp \
+		src/letterspecs.cpp \
+		src/playerbag.cpp
 QMAKE_TARGET  = LIFAP6_Projet
 DESTDIR       = 
 TARGET        = LIFAP6_Projet
@@ -762,11 +770,22 @@ obj/spot.o: src/spot.cpp src/spot.hpp \
 
 obj/test_board.o: src/test_board.cpp src/board.hpp \
 		src/spot.hpp \
-		src/bonus.hpp
+		src/bonus.hpp \
+		src/letterbag.hpp \
+		src/letterspecs.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/test_board.o src/test_board.cpp
 
-obj/letterbag.o: src/letterbag.cpp src/letterbag.hpp
+obj/letterbag.o: src/letterbag.cpp src/letterbag.hpp \
+		src/letterspecs.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/letterbag.o src/letterbag.cpp
+
+obj/letterspecs.o: src/letterspecs.cpp src/letterspecs.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/letterspecs.o src/letterspecs.cpp
+
+obj/playerbag.o: src/playerbag.cpp src/playerbag.hpp \
+		src/letterbag.hpp \
+		src/letterspecs.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o obj/playerbag.o src/playerbag.cpp
 
 ####### Install
 
