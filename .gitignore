@@ -3,3 +3,5 @@ obj/
 .DS_Store
 LIFAP6_Projet.pro.user
 .qmake.stash
+Makefile
+LIFAP6_Projet

@@ -64,11 +64,11 @@ char LetterBag::pickRandomLetter() {
     }
 
     random_device rd;
-    uniform_int_distribution<unsigned int> distrib (0, nbLetters-1);
+    uniform_int_distribution<unsigned int> distrib(0, nbLetters-1);
     mt19937 gen(rd());
 
     const unsigned int random = distrib(gen);
-    char selectedLetter = bag[random];
+    const char selectedLetter = bag[random];
     bag[random] = bag[nbLetters-1];
     nbLetters--;
 
