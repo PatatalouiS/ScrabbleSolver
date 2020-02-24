@@ -4,8 +4,11 @@
 #include <sstream>
 #include <random>
 #include "letterbag.hpp"
+#include "gaddag.hpp"
 
 using namespace std;
+
+const string DICO_PATH = "./data/dico.txt";
 
 int main() {
 //  Board b ;
@@ -32,16 +35,25 @@ int main() {
 //  b.load(ss) ;
 
 
-  LetterBag bag;
+//  LetterBag bag;
 
-  for(int i = 0; i < 102; ++i) {
-      cout << "NbLetters in bag : " << bag.getNbLetters() << endl;
-      cout << "Random :" << bag.pickRandomLetter() << endl;
-  }
+//  for(int i = 0; i < 102; ++i) {
+//      cout << "NbLetters in bag : " << bag.getNbLetters() << endl;
+//      cout << "Random :" << bag.pickRandomLetter() << endl;
+//  }
 
-  for(char a = 'A'; a <= 'Z'; a++) {
-      cout << "Get score : " << LetterBag::getScore(a) << endl;
-  }
+//  for(char a = 'A'; a <= 'Z'; a++) {
+//      cout << "Get score : " << LetterBag::getScore(a) << endl;
+//  }
+
+    Gaddag tree(DICO_PATH);
+    tree.print();
+
+    //cout << tree.search("C") << endl;
+
+
+
+
 
   return 0 ;
 }
