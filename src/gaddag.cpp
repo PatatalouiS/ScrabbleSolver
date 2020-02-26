@@ -40,8 +40,6 @@ Gaddag& Gaddag::addWord(const string& word) {
         return *this;
     }
 
-    //cout << "Insert : " << word << endl;
-
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
     bool inserted = false;
@@ -68,14 +66,13 @@ Gaddag& Gaddag::addWord(const string& word) {
         }
 
         if(wordIterator == lastLetter) {
-            inserted = true;
             current->setFinal();
+            inserted = true;
         }
         else {
             wordIterator++;
         }
     }
-
     return *this;
 }
 
@@ -129,7 +126,9 @@ void Gaddag::print() const {
         }
 
         for(Node* node : currentNode->getChilds()) {
-            stack.push(WordPair(node, currentWord + node->getLetter()));
+            if(node != Node::NO_NODE) {
+                stack.push(WordPair(node, currentWord + node->getLetter()));
+            }
         }
     }
 }
@@ -144,7 +143,9 @@ Gaddag::~Gaddag() {
         stack.pop();
 
         for(Node* node : current->getChilds()) {
-            stack.push(node);
+            if(node != Node::NO_NODE) {
+                stack.push(node);
+            }
         }
 
         delete current;

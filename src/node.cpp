@@ -7,6 +7,10 @@ using ChildsArray = std::array<Node*, 26>;
 Node::Node(const char letter, const bool final) {
     this->letter = letter;
     this->final = final;
+
+    for(Node*& node : childs) {
+        node = nullptr;
+    }
 }
 
 const ChildsArray& Node::getChilds() const {
@@ -18,12 +22,13 @@ char Node::getLetter() const {
 }
 
 Node* Node::getChildByLetter(const char letter) const {
-    for(Node* node : childs) {
-        if(node->getLetter() == letter) {
-            return node;
-        }
-    }
-    return nullptr;
+//    for(Node* node : childs) {
+//        if((node != nullptr) && (node->getLetter() == letter)) {
+//            return node;
+//        }
+//    }
+//    return nullptr;
+    return childs[static_cast<unsigned>(letter - 'A')];
 }
 
 unsigned int Node::getChildIndex(const Node* letter) {

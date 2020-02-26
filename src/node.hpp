@@ -11,7 +11,6 @@ using ChildsArray = std::array<Node*, 26>;
 
 class Node {
 
-
     private:
 
     static inline unsigned int getChildIndex(const Node* node);

@@ -47,7 +47,7 @@ int main() {
 //  }
 
     Gaddag tree(DICO_PATH);
-    tree.print();
+    //tree.print();
 
     //cout << tree.search("C") << endl;
 
