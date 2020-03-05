@@ -1,54 +1,38 @@
-#include "letterbag.hpp"
+
 #include <iostream>
-#include <random>
+
+#include "letterbag.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
 // Static Init Bloc
 
-const array<SpecsTuple, LetterBag::nbSymbols> LetterBag::initTab {
-    std::make_tuple('A', 9, 1),
-    std::make_tuple('B', 2, 3),
-    std::make_tuple('C', 2, 3),
-    std::make_tuple('D', 3, 2),
-    std::make_tuple('E', 15, 1),
-    std::make_tuple('F', 2, 4),
-    std::make_tuple('G', 2, 2),
-    std::make_tuple('H', 2, 4),
-    std::make_tuple('I', 8, 1),
-    std::make_tuple('J', 1, 8),
-    std::make_tuple('K', 1, 10),
-    std::make_tuple('L', 5, 1),
-    std::make_tuple('M', 3, 2),
-    std::make_tuple('N', 6, 1),
-    std::make_tuple('O', 6, 1),
-    std::make_tuple('P', 2, 3),
-    std::make_tuple('Q', 3, 2),
-    std::make_tuple('R', 6, 1),
-    std::make_tuple('S', 6, 1),
-    std::make_tuple('T', 6, 1),
-    std::make_tuple('U', 6, 1),
-    std::make_tuple('V', 2, 4),
-    std::make_tuple('W', 1, 10),
-    std::make_tuple('X', 1, 10),
-    std::make_tuple('Y', 1, 10),
-    std::make_tuple('Z', 1, 10)
+const array<unsigned int, LetterBag::nbSymbols> LetterBag::symbolPoints {
+    1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2,
+    1, 1, 3, 2, 1, 1, 1, 1, 4, 10, 10, 10, 10
 };
+
+const array<unsigned int, LetterBag::nbSymbols> LetterBag::symbolOccurrences {
+    9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3,
+    6, 6, 2, 3, 6, 6, 6, 6, 2, 1, 1, 1, 1
+};
+
+mt19937 LetterBag::generator(random_device{}());
 
 // Static Init Bloc
 
 
 LetterBag::LetterBag() {
-    for(unsigned int i = 0; i < nbSymbols; ++i) {
-        specs[i] = std::make_unique<LetterSpecs>(initTab[i]);
-    }
+    unsigned int index;
+    unsigned int occurrences;
 
-    for(auto& specs : initTab) {
-        const char currentSymbol = get<SYMB>(specs);
-        const unsigned int number = get<NB>(specs);
+    for(char letter = 'A'; letter <= 'Z'; ++letter) {
+        index = Utils::charToIndex(letter);
+        occurrences = symbolOccurrences[index];
 
-        for(unsigned int i = 0; i < number; ++i) {
-            bag.push_back(currentSymbol);
+        for(unsigned int i = 0; i < occurrences; ++i) {
+            bag.push_back(letter);
             nbLetters++;
         }
     }
@@ -63,11 +47,8 @@ char LetterBag::pickRandomLetter() {
         exit(EXIT_FAILURE);
     }
 
-    random_device rd;
     uniform_int_distribution<unsigned int> distrib(0, nbLetters-1);
-    mt19937 gen(rd());
-
-    const unsigned int random = distrib(gen);
+    const unsigned int random = distrib(generator);
     const char selectedLetter = bag[random];
     bag[random] = bag[nbLetters-1];
     nbLetters--;
@@ -89,9 +70,6 @@ void LetterBag::printBagContent() const {
     }
 }
 
-unsigned int LetterBag::getScore(const char letter) {
-    return get<PTS>(initTab[static_cast<unsigned int>(letter - 'A')]);
+unsigned int LetterBag::getLetterPoints(const char letter) {
+    return symbolPoints[Utils::charToIndex(letter)];
 }
-
-
-

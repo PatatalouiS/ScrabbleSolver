@@ -2,32 +2,38 @@
 #define LETTERBAG_HPP
 
 #include <array>
-#include <tuple>
 #include <vector>
-#include <memory>
-#include "letterspecs.hpp"
+#include <random>
 
-class LetterBag
-{
+class LetterBag {
+
     private :
 
-    unsigned int nbLetters = 0;
-    static const unsigned int nbSymbols = 26;
-    static const std::array<SpecsTuple, nbSymbols> initTab;
+        unsigned int nbLetters = 0;
 
-    std::array<std::unique_ptr<LetterSpecs>, nbSymbols> specs;
-    std::vector<char> bag;
+        std::vector<char> bag;
+
+        static const unsigned int nbSymbols = 26;
+
+        static const std::array<unsigned int, nbSymbols> symbolPoints;
+
+        static const std::array<unsigned int, nbSymbols> symbolOccurrences;
+
+        static std::mt19937 generator;
 
     public :
 
-    LetterBag();
-    char pickRandomLetter();
-    unsigned int getNbLetters() const;
-    bool isEmpty() const;
-    void printBagContent() const;
+        LetterBag();
 
-    static unsigned int getScore(const char letter);
+        char pickRandomLetter();
 
+        unsigned int getNbLetters() const;
+
+        bool isEmpty() const;
+
+        void printBagContent() const;
+
+        static unsigned int getLetterPoints(const char letter);
 };
 
 #endif // LETTERBAG_HPP

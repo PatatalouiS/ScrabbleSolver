@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const char HEAD_LETTER = '@';
+const unsigned char HEAD_LETTER = '@';
 
 Gaddag::Gaddag() {
     head = new Node(HEAD_LETTER);
@@ -18,7 +18,7 @@ Gaddag::Gaddag(const string fileName) : Gaddag() {
     ifstream stream(fileName);
 
     if(!stream.is_open()) {
-        cerr << "Error when openning FIle : " << fileName << endl;
+        cerr << "Error when openning File : " << fileName << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -43,15 +43,15 @@ Gaddag& Gaddag::addWord(const string& word) {
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
     bool inserted = false;
-    char currentLetter;
-    char letterToInsert;
+    unsigned char currentLetter;
+    unsigned char letterToInsert;
     Node* current = head;
     Node* newNode;
     Node* nextNode;
     ChildsArray currentChilds;
 
     while(!inserted) {
-        letterToInsert = *wordIterator;
+        letterToInsert = static_cast<unsigned char>(*wordIterator);
         currentChilds = current->getChilds();
         currentLetter = current->getLetter();
         nextNode = current->getChildByLetter(letterToInsert);
@@ -83,11 +83,11 @@ bool Gaddag::search(const string& word) const {
     auto wordIterator = word.begin();
     ChildsArray currentChilds;
     Node* nextNode;
-    char letterToSearch;
-    char currentLetter;
+    unsigned char letterToSearch;
+    unsigned char currentLetter;
 
     while(!trouve) {
-        letterToSearch = *wordIterator;
+        letterToSearch = static_cast<unsigned char>(*wordIterator);
         currentChilds = current->getChilds();
         currentLetter = current->getLetter();
         nextNode = current->getChildByLetter(letterToSearch);
@@ -110,7 +110,7 @@ bool Gaddag::search(const string& word) const {
 
 void Gaddag::print() const {
     WordPair(head, "");
-    stack<WordPair> stack({ make_pair(head,"") });
+    stack<WordPair> stack({ make_pair(head, "") });
     WordPair current;
     string currentWord;
     Node* currentNode;
@@ -127,7 +127,8 @@ void Gaddag::print() const {
 
         for(Node* node : currentNode->getChilds()) {
             if(node != Node::NO_NODE) {
-                stack.push(WordPair(node, currentWord + node->getLetter()));
+                string newWord = currentWord + static_cast<char>(node->getLetter());
+                stack.push(WordPair(node, newWord));
             }
         }
     }
@@ -153,5 +154,3 @@ Gaddag::~Gaddag() {
     }
     cout << "nbDeleted : " << nbDeleted << endl;
 }
-
-

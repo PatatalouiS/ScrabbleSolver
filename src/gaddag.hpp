@@ -1,37 +1,35 @@
 #ifndef GADDAG_HPP
 #define GADDAG_HPP
 
-#include "node.hpp"
 #include <string>
+
+#include "node.hpp"
 
 class Gaddag {
 
     public:
 
+        Gaddag();
 
+        Gaddag(const std::string fileName);
 
-    Gaddag();
+        ~Gaddag();
 
-    Gaddag(const std::string fileName);
+        const Node* getHead() const;
 
-    ~Gaddag();
+        Gaddag& addWord(const std::string& word);
 
-    const Node* getHead() const;
+        bool search(const std::string& word) const;
 
-    Gaddag& addWord(const std::string& word);
-
-    bool search(const std::string& word) const;
-
-    void print() const;
+        void print() const;
 
     private:
 
-    using WordPair = std::pair<Node*, std::string>;
+        using WordPair = std::pair<Node*, std::string>;
 
-    Node* head;
+        Node* head;
 
-    void addWordPrivate(std::string& word);
-
+        void addWordPrivate(std::string& word);
 };
 
 #endif // GADDAG_HPP

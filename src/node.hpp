@@ -1,9 +1,7 @@
 #ifndef NODE_HPP
 #define NODE_HPP
 
-#include <vector>
 #include <array>
-#include <optional>
 
 class Node;
 
@@ -13,33 +11,33 @@ class Node {
 
     private:
 
-    static inline unsigned int getChildIndex(const Node* node);
+        static unsigned int getChildIndex(const Node* node);
 
     public:
 
-    static constexpr Node* const NO_NODE = nullptr;
+        static constexpr Node* const NO_NODE = nullptr;
 
-    Node(const char letter, const bool final = false);
+        Node(const char unsigned letter, const bool final = false);
 
-    char getLetter() const;
+        unsigned char getLetter() const;
 
-    const ChildsArray& getChilds() const;
+        const ChildsArray& getChilds() const;
 
-    Node* getChildByLetter(const char letter) const;
+        Node* getChildByLetter(const unsigned char letter) const;
 
-    void addChild(Node* newNode);
+        void addChild(Node* newNode);
 
-    void setFinal(const bool final = true);
+        void setFinal(const bool final = true);
 
-    bool isFinal() const;
+        bool isFinal() const;
 
     private:
 
-    char letter;
+        unsigned char letter;
 
-    bool final;
+        bool final;
 
-    ChildsArray childs;
+        ChildsArray childs;
 };
 
 #endif // NODE_HPP

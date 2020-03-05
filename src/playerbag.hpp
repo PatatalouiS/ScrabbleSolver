@@ -5,17 +5,17 @@
 #include "letterbag.hpp"
 
 
-class PlayerBag
-{
+class PlayerBag {
+
     public:
 
-    PlayerBag(LetterBag& mainLetterBag);
+     PlayerBag(LetterBag& mainLetterBag);
 
     private :
 
-    static const unsigned int nbLetters = 7;
+        static const unsigned int nbLetters = 7;
 
-    std::array<char, nbLetters> playerLetters;
+        std::array<char, nbLetters> playerLetters;
 };
 
 #endif // PLAYERBAG_HPP
