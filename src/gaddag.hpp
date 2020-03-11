@@ -2,6 +2,8 @@
 #define GADDAG_HPP
 
 #include <string>
+#include <vector>
+#include <memory>
 
 #include "node.hpp"
 
@@ -25,11 +27,15 @@ class Gaddag {
 
     private:
 
+        using WordsArray = std::vector<std::string>;
+
         using WordPair = std::pair<Node*, std::string>;
 
-        Node* head;
+public :
 
-        void addWordPrivate(std::string& word);
+        std::unique_ptr<WordsArray> getWordsArray(const std::string& word) const;
+
+        Node* head;
 };
 
 #endif // GADDAG_HPP

@@ -47,7 +47,12 @@ int main() {
 //  }
 
     Gaddag tree(DICO_PATH);
-    tree.print();
+
+    auto ptr = tree.getWordsArray("BATEAU");
+
+    for(string& str : *ptr) {
+        cout << str << endl;
+    }
 
     //cout << tree.search("C") << endl;
 

@@ -11,7 +11,7 @@ class LetterBag {
 
         unsigned int nbLetters = 0;
 
-        std::vector<char> bag;
+        std::vector<unsigned char> bag;
 
         static const unsigned int nbSymbols = 26;
 
@@ -25,7 +25,7 @@ class LetterBag {
 
         LetterBag();
 
-        char pickRandomLetter();
+        unsigned char pickRandomLetter();
 
         unsigned int getNbLetters() const;
 
@@ -33,7 +33,7 @@ class LetterBag {
 
         void printBagContent() const;
 
-        static unsigned int getLetterPoints(const char letter);
+        static unsigned int getLetterPoints(const unsigned char letter);
 };
 
 #endif // LETTERBAG_HPP

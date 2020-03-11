@@ -1,12 +1,12 @@
 #include "gaddag.hpp"
-#include <algorithm>
 #include <stack>
-#include <queue>
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <algorithm>
 
 using namespace std;
+
+using WordsArray = std::vector<std::string>;
 
 const unsigned char HEAD_LETTER = '@';
 
@@ -17,8 +17,13 @@ Gaddag::Gaddag() {
 Gaddag::Gaddag(const string fileName) : Gaddag() {
     ifstream stream(fileName);
 
-    if(!stream.is_open()) {
-        cerr << "Error when openning File : " << fileName << endl;
+    try {
+        if(!stream.is_open()) {
+            throw string("Error when openning File : " + fileName);
+        }
+    }
+    catch(const string& error) {
+        cerr << error << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -33,6 +38,37 @@ Gaddag::Gaddag(const string fileName) : Gaddag() {
 
 const Node* Gaddag::getHead() const {
     return head;
+}
+
+unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
+    unique_ptr<WordsArray> array = make_unique<WordsArray>();
+
+    string normalString(word);
+    auto normalStringIt = normalString.begin() + 1;
+    auto normalEnd = normalString.end();
+
+    string reverseString(word);
+    reverse(reverseString.begin(), reverseString.end());
+    auto reverseStringIt = reverseString.end()-1;
+    auto reverseEnd = reverseString.end();
+
+    string normalPart;
+    string reversePart;
+
+    while(reverseStringIt >= reverseString.begin()) {
+        reversePart = reverseString;
+        normalPart = word;
+
+        reversePart.assign(reverseStringIt, reverseEnd);
+        normalPart.assign(normalStringIt, normalEnd);
+
+        array->push_back(reversePart + "+" + normalPart);
+
+        reverseStringIt--;
+        normalStringIt++;
+    }
+
+    return array;
 }
 
 Gaddag& Gaddag::addWord(const string& word) {
@@ -77,7 +113,7 @@ Gaddag& Gaddag::addWord(const string& word) {
 }
 
 bool Gaddag::search(const string& word) const {
-    bool trouve = false;
+    //bool trouve = false;
     Node* current = head;
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
@@ -86,7 +122,7 @@ bool Gaddag::search(const string& word) const {
     unsigned char letterToSearch;
     unsigned char currentLetter;
 
-    while(!trouve) {
+    while(true) { //! trouve
         letterToSearch = static_cast<unsigned char>(*wordIterator);
         currentChilds = current->getChilds();
         currentLetter = current->getLetter();
@@ -105,11 +141,9 @@ bool Gaddag::search(const string& word) const {
         }
         wordIterator++;
     }
-    return false;
 }
 
 void Gaddag::print() const {
-    WordPair(head, "");
     stack<WordPair> stack({ make_pair(head, "") });
     WordPair current;
     string currentWord;

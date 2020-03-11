@@ -27,7 +27,7 @@ LetterBag::LetterBag() {
     unsigned int index;
     unsigned int occurrences;
 
-    for(char letter = 'A'; letter <= 'Z'; ++letter) {
+    for(unsigned char letter = 'A'; letter <= 'Z'; ++letter) {
         index = Utils::charToIndex(letter);
         occurrences = symbolOccurrences[index];
 
@@ -38,7 +38,7 @@ LetterBag::LetterBag() {
     }
 }
 
-char LetterBag::pickRandomLetter() {
+unsigned char LetterBag::pickRandomLetter() {
     try {
         if(isEmpty()) throw string("ERROR : No letters in the bag");
     }
@@ -49,7 +49,7 @@ char LetterBag::pickRandomLetter() {
 
     uniform_int_distribution<unsigned int> distrib(0, nbLetters-1);
     const unsigned int random = distrib(generator);
-    const char selectedLetter = bag[random];
+    const unsigned char selectedLetter = bag[random];
     bag[random] = bag[nbLetters-1];
     nbLetters--;
 
@@ -65,11 +65,11 @@ bool LetterBag::isEmpty() const {
 }
 
 void LetterBag::printBagContent() const {
-    for(const char letter : bag) {
+    for(const unsigned char letter : bag) {
         cout << letter << endl;
     }
 }
 
-unsigned int LetterBag::getLetterPoints(const char letter) {
+unsigned int LetterBag::getLetterPoints(const unsigned char letter) {
     return symbolPoints[Utils::charToIndex(letter)];
 }

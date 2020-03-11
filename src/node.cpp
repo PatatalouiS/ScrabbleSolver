@@ -7,7 +7,7 @@ Node::Node(const unsigned char letter, const bool final) {
     this->letter = letter;
     this->final = final;
 
-    for(Node*& node : childs) {
+    for(Node* & node : childs) {
         node = nullptr;
     }
 }
