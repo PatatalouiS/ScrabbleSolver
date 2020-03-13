@@ -8,7 +8,8 @@ using namespace std;
 
 using WordsArray = std::vector<std::string>;
 
-const unsigned char HEAD_LETTER = '@';
+static constexpr unsigned char HEAD_LETTER = '@';
+static constexpr unsigned char LINK_LETTER = '+';
 
 Gaddag::Gaddag() {
     head = new Node(HEAD_LETTER);
@@ -49,7 +50,7 @@ unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
 
     string reverseString(word);
     reverse(reverseString.begin(), reverseString.end());
-    auto reverseStringIt = reverseString.end()-1;
+    auto reverseStringIt = reverseString.end() - 1;
     auto reverseEnd = reverseString.end();
 
     string normalPart;
@@ -57,12 +58,12 @@ unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
 
     while(reverseStringIt >= reverseString.begin()) {
         reversePart = reverseString;
-        normalPart = word;
-
         reversePart.assign(reverseStringIt, reverseEnd);
+
+        normalPart = normalString;
         normalPart.assign(normalStringIt, normalEnd);
 
-        array->push_back(reversePart + "+" + normalPart);
+        array->push_back(reversePart.append(1,LINK_LETTER).append(normalPart));
 
         reverseStringIt--;
         normalStringIt++;
@@ -71,11 +72,7 @@ unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
     return array;
 }
 
-Gaddag& Gaddag::addWord(const string& word) {
-    if(word == "") {
-        return *this;
-    }
-
+Gaddag& Gaddag::addWordPrivate(const string& word) {
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
     bool inserted = false;
@@ -109,6 +106,20 @@ Gaddag& Gaddag::addWord(const string& word) {
             wordIterator++;
         }
     }
+    return *this;
+}
+
+Gaddag& Gaddag::addWord(const std::string &word) {
+    if(word == "") {
+        return *this;
+    }
+
+    unique_ptr<WordsArray> wordsToInsert = getWordsArray(word);
+
+    for(const string& w : *wordsToInsert) {
+        addWordPrivate(w);
+    }
+
     return *this;
 }
 

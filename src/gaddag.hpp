@@ -31,9 +31,9 @@ class Gaddag {
 
         using WordPair = std::pair<Node*, std::string>;
 
-public :
-
         std::unique_ptr<WordsArray> getWordsArray(const std::string& word) const;
+
+        Gaddag& addWordPrivate(const std::string& word);
 
         Node* head;
 };

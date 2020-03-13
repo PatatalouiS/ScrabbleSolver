@@ -5,7 +5,7 @@
 
 class Node;
 
-using ChildsArray = std::array<Node*, 26>;
+using ChildsArray = std::array<Node*, 27>;
 
 class Node {
 
