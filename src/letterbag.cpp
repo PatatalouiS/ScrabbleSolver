@@ -8,20 +8,17 @@ using namespace std;
 
 // Static Init Bloc
 
-const array<unsigned int, LetterBag::nbSymbols> LetterBag::symbolPoints {
-    1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2,
-    1, 1, 3, 2, 1, 1, 1, 1, 4, 10, 10, 10, 10
-};
-
-const array<unsigned int, LetterBag::nbSymbols> LetterBag::symbolOccurrences {
-    9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3,
-    6, 6, 2, 3, 6, 6, 6, 6, 2, 1, 1, 1, 1
-};
+const array<LetterBag::LetterSpecs, LetterBag::nbSymbols> LetterBag::letterSpecsArray {{
+        { 1, 9 }, { 3, 2 }, { 3, 2 }, { 2, 3 }, { 1, 15 }, { 4, 2 },
+        { 2, 2 }, { 4, 2 }, { 1, 8 }, { 8, 1 }, { 10, 1 }, { 1, 5 },
+        { 2, 3 }, { 1, 6 }, { 1, 6 }, { 3, 2 }, { 2, 3 }, { 1, 6 },
+        { 1, 6 }, { 1, 6 }, { 1, 6 }, { 4, 2 }, { 10, 1 }, { 10, 1 },
+        { 10, 1 }, { 10, 1 }
+}};
 
 mt19937 LetterBag::generator(random_device{}());
 
 // Static Init Bloc
-
 
 LetterBag::LetterBag() {
     unsigned int index;
@@ -29,7 +26,7 @@ LetterBag::LetterBag() {
 
     for(unsigned char letter = 'A'; letter <= 'Z'; ++letter) {
         index = Utils::charToIndex(letter);
-        occurrences = symbolOccurrences[index];
+        occurrences = letterSpecsArray[index].occurrences;
 
         for(unsigned int i = 0; i < occurrences; ++i) {
             bag.push_back(letter);
@@ -71,5 +68,5 @@ void LetterBag::printBagContent() const {
 }
 
 unsigned int LetterBag::getLetterPoints(const unsigned char letter) {
-    return symbolPoints[Utils::charToIndex(letter)];
+    return letterSpecsArray[Utils::charToIndex(letter)].points;
 }

@@ -7,7 +7,12 @@
 
 class LetterBag {
 
-    private :
+    private : 
+
+        struct LetterSpecs {
+            unsigned int points;
+            unsigned int occurrences;
+        };
 
         unsigned int nbLetters = 0;
 
@@ -15,9 +20,7 @@ class LetterBag {
 
         static const unsigned int nbSymbols = 26;
 
-        static const std::array<unsigned int, nbSymbols> symbolPoints;
-
-        static const std::array<unsigned int, nbSymbols> symbolOccurrences;
+        static const std::array<LetterSpecs, nbSymbols> letterSpecsArray;
 
         static std::mt19937 generator;
 
