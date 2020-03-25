@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <thread>
+#include "prodcons.hpp"
 
 using namespace std;
 
@@ -17,6 +19,8 @@ Gaddag::Gaddag() {
 
 Gaddag::Gaddag(const string fileName) : Gaddag() {
     ifstream stream(fileName);
+//    ProdCons<string> prodCons(10);
+//    ProdCons<unique_ptr<WordsArray>> ptrTab(10);
 
     try {
         if(!stream.is_open()) {
@@ -63,7 +67,9 @@ unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
         normalPart = normalString;
         normalPart.assign(normalStringIt, normalEnd);
 
-        array->push_back(reversePart.append(1,LINK_LETTER).append(normalPart));
+        array->push_back(reversePart
+                            .append(1,LINK_LETTER)
+                            .append(normalPart));
 
         reverseStringIt--;
         normalStringIt++;
@@ -123,9 +129,12 @@ Gaddag& Gaddag::addWord(const std::string &word) {
     return *this;
 }
 
-bool Gaddag::search(const string& word) const {
+bool Gaddag::searchPrivate(const string& word, Node* start) const {
     //bool trouve = false;
-    Node* current = head;
+    Node* current = start == nullptr
+            ? head
+            : start;
+
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
     ChildsArray currentChilds;
@@ -154,6 +163,30 @@ bool Gaddag::search(const string& word) const {
     }
 }
 
+bool Gaddag::search(const std::string &word) const {
+    if(word.length() <= 1) {
+        return false;
+    }
+
+    Node* current = head;
+    const unsigned char firstLetter = static_cast<unsigned char>(word[0]);
+    Node* nextNode;
+
+    nextNode = current->getChildByLetter(firstLetter);
+    if(nextNode == Node::NO_NODE) {
+        return false;
+    }
+
+    current = nextNode;
+
+    nextNode = current->getChildByLetter(LINK_LETTER);
+    if(nextNode == Node::NO_NODE) {
+        return false;
+    }
+
+    return searchPrivate(word.substr(1, word.length() - 1),  nextNode);
+}
+
 void Gaddag::print() const {
     stack<WordPair> stack({ make_pair(head, "") });
     WordPair current;
@@ -173,7 +206,7 @@ void Gaddag::print() const {
         for(Node* node : currentNode->getChilds()) {
             if(node != Node::NO_NODE) {
                 string newWord = currentWord + static_cast<char>(node->getLetter());
-                stack.push(WordPair(node, newWord));
+                stack.push({ node, newWord });
             }
         }
     }

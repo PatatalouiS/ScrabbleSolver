@@ -33,6 +33,8 @@ class Gaddag {
 
         std::unique_ptr<WordsArray> getWordsArray(const std::string& word) const;
 
+        bool searchPrivate(const std::string& word, Node* start = nullptr) const;
+
         Gaddag& addWordPrivate(const std::string& word);
 
         Node* head;

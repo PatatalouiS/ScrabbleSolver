@@ -8,7 +8,8 @@ using namespace std;
 
 // Static Init Bloc
 
-const array<LetterBag::LetterSpecs, LetterBag::nbSymbols> LetterBag::letterSpecsArray {{
+const array<LetterBag::LetterSpecs, LetterBag::nbSymbols>
+    LetterBag::letterSpecsArray {{
         { 1, 9 }, { 3, 2 }, { 3, 2 }, { 2, 3 }, { 1, 15 }, { 4, 2 },
         { 2, 2 }, { 4, 2 }, { 1, 8 }, { 8, 1 }, { 10, 1 }, { 1, 5 },
         { 2, 3 }, { 1, 6 }, { 1, 6 }, { 3, 2 }, { 2, 3 }, { 1, 6 },
