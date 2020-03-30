@@ -7,6 +7,9 @@
 
 #include "node.hpp"
 
+static constexpr unsigned char HEAD_LETTER = '@';
+static constexpr unsigned char LINK_LETTER = '+';
+
 class Gaddag {
 
     public:
@@ -19,7 +22,13 @@ class Gaddag {
 
         const Node* getHead() const;
 
+        Node* getHead();
+
         Gaddag& addWord(const std::string& word);
+
+        std::unique_ptr<
+            std::vector<
+                std::string>> containsArray(const unsigned char c) const;
 
         bool search(const std::string& word) const;
 

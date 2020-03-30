@@ -105,11 +105,27 @@ void Board::load(std::istream& in) {
 
 //access to the spots by coordinates
 Spot Board::operator()(unsigned char l, unsigned char c) const {
+    assert((l >= 0) && (l < SIZE));
+    assert((c >= 0) && (c < SIZE));
   return spots[l*15 + c] ;
 }
 
 Spot& Board::operator()(unsigned char l, unsigned char c) {
+    assert((l >= 0) && (l < SIZE));
+    assert((c >= 0) && (c < SIZE));
   return spots[l*15 + c] ;
+}
+
+Spot Board::operator() (const SpotPos& sp) const {
+    assert((sp.indexLine >= 0) && (sp.indexLine < SIZE));
+    assert((sp.indexCol >= 0) && (sp.indexCol < SIZE));
+    return spots[sp.indexLine*15 + sp.indexCol];
+}
+
+Spot& Board::operator() (const SpotPos& sp) {
+    assert((sp.indexLine >= 0) && (sp.indexLine < SIZE));
+    assert((sp.indexCol >= 0) && (sp.indexCol < SIZE));
+    return spots[sp.indexLine*15 + sp.indexCol];
 }
 
 //display on the console

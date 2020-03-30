@@ -5,13 +5,13 @@
 #include <algorithm>
 #include <thread>
 #include "prodcons.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
 using WordsArray = std::vector<std::string>;
 
-static constexpr unsigned char HEAD_LETTER = '@';
-static constexpr unsigned char LINK_LETTER = '+';
+
 
 Gaddag::Gaddag() {
     head = new Node(HEAD_LETTER);
@@ -42,6 +42,10 @@ Gaddag::Gaddag(const string fileName) : Gaddag() {
 }
 
 const Node* Gaddag::getHead() const {
+    return head;
+}
+
+Node* Gaddag::getHead() {
     return head;
 }
 
@@ -161,6 +165,39 @@ bool Gaddag::searchPrivate(const string& word, Node* start) const {
         }
         wordIterator++;
     }
+}
+
+unique_ptr<vector<string>> Gaddag::containsArray(const unsigned char c) const {
+    unique_ptr<vector<string>> tab = make_unique<vector<string>>();
+
+    Node* current = head->getChildByLetter(c);
+    if(current == Node::NO_NODE) return tab;
+
+    stack<WordPair> stack({ make_pair(current, string().append(1, c)) });
+    WordPair strPair;
+    string currentWord;
+    Node* currentNode;
+
+    while(!stack.empty()) {
+        strPair = stack.top();
+        currentNode = strPair.first;
+        currentWord = strPair.second;
+        stack.pop();
+
+        if(currentNode->isFinal()) {
+            tab->push_back(Utils::toRegularWord(strPair.second));
+        }
+
+        for(Node* node : currentNode->getChilds()) {
+            if(node != Node::NO_NODE) {
+                string newWord = currentWord + static_cast<char>(node->getLetter());
+                stack.push({ node, newWord });
+            }
+        }
+    }
+
+
+    return tab;
 }
 
 bool Gaddag::search(const std::string &word) const {
