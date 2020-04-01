@@ -71,8 +71,7 @@ int main() {
 
     // createDicoTest(DICO_PATH, DICO_PATH_TEST, 20);
     //Gaddag tree(DICO_PATH_TEST);
-    //cout; << tree.search("C") << endl;
-
+    //cout; << tree.search("C") << endl
 
     std::stringstream ss ;
     ss << "..............." << std::endl ;
@@ -91,7 +90,7 @@ int main() {
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
 
-    Game game(DICO_PATH_TEST2, ss, {{'N', 'I', 'Q', 'U', 'N', 'Y', 'O'}});
+    Game game(DICO_PATH, ss, {{'A', 'O', 'U', 'J', 'Z', 'E', 'P'}});
 
     Solver solver(game);
 

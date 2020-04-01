@@ -2,6 +2,7 @@
 #define SOLVER_HPP
 
 #include "board.hpp"
+#include "stroke.hpp"
 #include <vector>
 #include <set>
 #include <optional>
@@ -33,15 +34,11 @@ class Solver {
             NOT_USED
         };
 
-        enum class Direction {
-            HORIZONTAL,
-            VERTICAL
-        };
-
         std::optional<SpotPos> computeNextPos(
                 const SpotPos& start,
                 const SpotPos& current,
-                const PlusStatus& plusStatus
+                const PlusStatus& plusStatus,
+                const Direction direction
         );
 
         struct SearchingParams {
@@ -50,6 +47,7 @@ class Solver {
             PlayerBag availableLetters;
             std::string word;
             PlusStatus plusStatus;
+            Direction direction;
 
             void print() {
                 std::cout << "value : " << node->getLetter() << std::endl;
@@ -60,4 +58,10 @@ class Solver {
         };     
   };
 
+
+
 #endif // SOLVER_HPP
+
+
+
+

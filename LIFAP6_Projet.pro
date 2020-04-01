@@ -24,6 +24,7 @@ HEADERS += src/board.hpp src/bonus.hpp src/spot.hpp \
     src/playerbag.hpp \
     src/prodcons.hpp \
     src/solver.hpp \
+    src/stroke.hpp \
     src/utils.hpp
 SOURCES += src/board.cpp src/bonus.cpp src/spot.cpp src/test_board.cpp \
     src/gaddag.cpp \
@@ -31,4 +32,5 @@ SOURCES += src/board.cpp src/bonus.cpp src/spot.cpp src/test_board.cpp \
     src/node.cpp \
     src/playerbag.cpp \
     src/solver.cpp \
+    src/stroke.cpp \
     src/utils.cpp
