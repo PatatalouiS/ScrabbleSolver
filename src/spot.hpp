@@ -1,11 +1,12 @@
 #pragma once
 
 #include "bonus.hpp"
-
 #include <iostream>
+#include "unordered_set"
 
 
 struct SpotPos {
+
     unsigned char indexLine;
     unsigned char indexCol;
 
@@ -18,9 +19,45 @@ struct SpotPos {
         out << "Line : " << int(sp.indexLine) << "  Col : " << int(sp.indexCol);
         return out;
     }
+
+    bool operator==(const SpotPos& other) const {
+        return (indexLine == other.indexLine) &&
+               (indexCol == other.indexCol);
+    }
+};
+
+struct Stroke {
+    std::string word;
+    SpotPos pos;
+
+    Stroke(const std::string& w, const SpotPos& p) :
+        word(w), pos(p){
+    }
+
+    bool operator==(const Stroke& other) const {
+        return (word == other.word) && (pos == other.pos);
+    }
 };
 
 
+namespace std {
+
+    template<>
+    struct hash<SpotPos> {
+        size_t operator()(const SpotPos& pos) const {
+            auto hash = std::hash<unsigned char>();
+            return hash(pos.indexLine) ^ (hash(pos.indexCol) << 1);
+        }
+    };
+
+    template<>
+    struct hash<Stroke> {
+        size_t operator()(const Stroke& s) const {
+            return (std::hash<std::string>()(s.word)
+                    ^ (std::hash<SpotPos>()(s.pos) << 1));
+        }
+    };
+}
 
 /* A spot on the board to place a letter */
 

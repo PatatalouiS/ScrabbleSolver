@@ -25,17 +25,17 @@ string Utils::toRegularWord(const string& str) {
     string out;
 
 
-    int i = 0;
+    unsigned int i = 0;
 
     for(i = 0; str[i] != '+'; ++i) {
         previous.push_back(str[i]);
     }
 
-    for(int j = previous.size()-1; j >= 0; j--) {
+    for(unsigned long j = previous.size()-1; int(j) >= 0; j--) {
         out.push_back(previous[j]);
     }
 
-    for(int j = i+1; j < str.size(); j++) {
+    for(unsigned long j = i+1; j < str.size(); j++) {
         out.push_back(str[j]);
     }
 

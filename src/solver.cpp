@@ -14,53 +14,47 @@ Solver::Solver(Game& game) : _game(game) {
 const Board& Solver::solveNext() {
     auto availableStrokes = getAvailableStrokes();
 
-    for(auto& word : *availableStrokes) {
-        cout << word << endl;
+    for(const auto& s : *availableStrokes) {
+        cout << " Word : " << s.word << " Pos : " << int(s.pos.indexLine) << " , " << int(s.pos.indexCol) << endl;
     }
-
 
     return _game.board;
 }
 
-bool Solver::computeNextPos(const SpotPos &start,
-                            SpotPos &current,
+optional<SpotPos> Solver::computeNextPos(const SpotPos &start,
+                            const SpotPos &current,
                             const PlusStatus& plusStatus) {
     if(plusStatus == PlusStatus::IN_USE) {
         if((start.indexCol + 1) >= Board::SIZE) {
-            return false;
+            return nullopt;
         }
-
-        current.indexCol = start.indexCol + 1;
-        current.indexLine = start.indexLine;
-        return true;
+        return SpotPos(start.indexLine, start.indexCol + 1);
     }
 
     if(plusStatus == PlusStatus::NOT_USED) {
         if((current.indexCol - 1) < 0) {
-            return false;
+            return nullopt;
         }
-
-        current.indexCol--;
-        return true;
+        return SpotPos(current.indexLine, current.indexCol - 1);
     }
     else {
         if((current.indexCol + 1) >= Board::SIZE) {
-            return false;
+            return nullopt;
         }
-
-        current.indexCol++;
-        return true;
+        return SpotPos(current.indexLine, current.indexCol + 1);
     }
 }
 
-unique_ptr<Solver::StrokesArray> Solver::getAvailableStrokes() {
+unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
     // vector for pushing valid stokes
-    unique_ptr<StrokesArray> array = make_unique<StrokesArray>();
+    unique_ptr<StrokesSet> array = make_unique<StrokesSet>();
     // array of start cells, to begin serach
-    unique_ptr<NeighborsArray> startCellsArray = getNeighBors();
+    unique_ptr<NeighborsSet> startCellsArray = getNeighBors();
 
-    for(SpotPos& position : *startCellsArray) {
+    for(const SpotPos& position : *startCellsArray) {
         SpotPos startPos(position.indexLine, position.indexCol);
+
+        cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
 
         stack<SearchingParams> stack ({{
             _game.dico.getHead(),
@@ -73,6 +67,7 @@ unique_ptr<Solver::StrokesArray> Solver::getAvailableStrokes() {
         while(!stack.empty()) {
             // read top of the stack
             SearchingParams current = stack.top();
+            //current.print();
             Node* currentNode = current.node;
             SpotPos currentPos = current.position;
             Spot currentSpot = _game.board(currentPos);
@@ -88,23 +83,24 @@ unique_ptr<Solver::StrokesArray> Solver::getAvailableStrokes() {
                 // SI c'est un noeud final, on ajoute le mot
                 if(currentNode->isFinal()) {
                     string regular = Utils::toRegularWord(currentWord);
-                    array->insert(currentWord);
+                    array->insert({{ regular, startPos }});
                 }
 
-                // parcours du tableau de lettre possibles
-                for(unsigned char letter : currentLetters.data()) {
-                    Node* child = currentNode->getChildByLetter(letter);
+                auto newPos = computeNextPos(startPos, currentPos, currentPlusStatus);
+                // Si la prochaine position de curseur est valide
+                if(newPos) {
+                    // parcours du tableau de lettre possibles
+                    for(unsigned char letter : currentLetters.data()) {
+                        Node* child = currentNode->getChildByLetter(letter);
 
-                    // l'enfant associé a la lettre existe
-                    if(child != Node::NO_NODE) {
-
-                        // Si prochaine position valide, On insère dans la pile
-                        if(computeNextPos(startPos, currentPos, currentPlusStatus)) {
+                        // l'enfant associé a la lettre existe
+                        if(child != Node::NO_NODE) {
+                            // On insère
                             stack.push({
                                 child,
-                                currentPos,
+                                *newPos,
                                 currentLetters.pop(letter),
-                                currentWord += static_cast<char>(letter),
+                                string(currentWord) += static_cast<char>(letter),
                                 currentPlusStatus
                             });
                         }
@@ -116,20 +112,21 @@ unique_ptr<Solver::StrokesArray> Solver::getAvailableStrokes() {
                     Node* linkChild = currentNode->getChildByLetter(LINK_LETTER);
                     // et qu'il n'est pas nullptr
                     if(linkChild != Node::NO_NODE) {
-                        // et que l aposition générée est valide, on l'ajoute
-                        if(computeNextPos(startPos, currentPos, PlusStatus::IN_USE)) {
+                        // et que la position générée est valide, on l'ajoute
+                        auto newPos = computeNextPos(startPos, currentPos, PlusStatus::IN_USE);
+
+                        if(newPos) {
                             stack.push({
                                 linkChild,
-                                currentPos,
+                                *newPos,
                                 currentLetters,
-                                currentWord += static_cast<char>(LINK_LETTER),
+                                string(currentWord) += static_cast<char>(LINK_LETTER),
                                 PlusStatus::USED
                             });
                         }
                     }
                 }
             }
-
             //// CASE OCCUPEE, SPOT PRIS ////
 
             else {
@@ -138,13 +135,14 @@ unique_ptr<Solver::StrokesArray> Solver::getAvailableStrokes() {
                 // lettre forcée compatible dans le Gaddagg
                 if(forcedNode != Node::NO_NODE) {
 
+                    auto newPos = computeNextPos(startPos, currentPos, currentPlusStatus);
                     // si la position générée est valide, on avance
-                    if(computeNextPos(startPos, currentPos, currentPlusStatus)) {
+                    if(newPos) {
                         stack.push({
                             forcedNode,
-                            currentPos,
+                            *newPos,
                             currentLetters,
-                            currentWord += static_cast<char>(forcedLetter),
+                            string(currentWord) += static_cast<char>(forcedLetter),
                             currentPlusStatus
                         });
                     }
@@ -157,38 +155,32 @@ unique_ptr<Solver::StrokesArray> Solver::getAvailableStrokes() {
 }
 
 
-
-unique_ptr<Solver::NeighborsArray> Solver::getNeighBors() {
-    static const auto comparator = [](SpotPos a, SpotPos b) -> bool {
-        return (a.indexLine != b.indexLine) || (a.indexCol != b.indexCol);
-    };
-
-    set<SpotPos, decltype(comparator)> set(comparator);
+unique_ptr<Solver::NeighborsSet> Solver::getNeighBors() {
+    unique_ptr set = make_unique<NeighborsSet>();
 
     for(unsigned char line = 0; line < Board::SIZE; line++) {
         for(unsigned char col = 0; col < Board::SIZE; col++) {
-            Spot current = _game.board(line, col);
+            const Spot current = _game.board(line, col);
             if(current.letter != 0) {
 
-                std::array<SpotPos, 4> neighborsToTest ({
+                const std::array<SpotPos, 4> neighborsToTest ({
                     SpotPos((line - 1) < 0 ? 0 : (line - 1), col),
                     SpotPos((line + 1) >=15 ? 14 : (line + 1), col),
                     SpotPos(line, (col + 1) >= 15 ? 14 : (col + 1)),
                     SpotPos(line, (col - 1) < 0 ? 0 : (col -1))
                 });
 
-                for(SpotPos& s : neighborsToTest) {
-                    unsigned char indexLine = s.indexLine;
-                    unsigned char indexCol = s.indexCol;
+                for(const SpotPos& s : neighborsToTest) {
+                    const unsigned char indexLine = s.indexLine;
+                    const unsigned char indexCol = s.indexCol;
 
                     if(_game.board(indexLine, indexCol).letter == Spot::EMPTY_SPOT) {
-                        //cout << int(indexLine) << " , " << int(indexCol) << endl;
-                        set.insert({{ indexLine, indexCol }});
+                        set->insert({{ indexLine, indexCol }});
                     }
                 }
             }
         }
     }
 
-    return make_unique<NeighborsArray>(set.begin(), set.end());
+    return set;
 }

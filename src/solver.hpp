@@ -4,14 +4,16 @@
 #include "board.hpp"
 #include <vector>
 #include <set>
+#include <optional>
+#include <iostream>
+#include <utility>
 
 
 class Solver {
-
     public:
 
-        using StrokesArray = std::set<std::string>;
-        using NeighborsArray = std::vector<SpotPos>;
+        using StrokesSet = std::unordered_set<Stroke>;
+        using NeighborsSet = std::unordered_set<SpotPos>;
 
         Solver(Game& game);
 
@@ -21,9 +23,9 @@ class Solver {
 
         Game& _game;
 
-        std::unique_ptr<StrokesArray> getAvailableStrokes();
+        std::unique_ptr<StrokesSet> getAvailableStrokes();
 
-        std::unique_ptr<NeighborsArray> getNeighBors();
+        std::unique_ptr<NeighborsSet> getNeighBors();
 
         enum class PlusStatus {
             USED,
@@ -31,9 +33,14 @@ class Solver {
             NOT_USED
         };
 
-        bool computeNextPos(
+        enum class Direction {
+            HORIZONTAL,
+            VERTICAL
+        };
+
+        std::optional<SpotPos> computeNextPos(
                 const SpotPos& start,
-                SpotPos& current,
+                const SpotPos& current,
                 const PlusStatus& plusStatus
         );
 
@@ -43,15 +50,14 @@ class Solver {
             PlayerBag availableLetters;
             std::string word;
             PlusStatus plusStatus;
-        };
-};
+
+            void print() {
+                std::cout << "value : " << node->getLetter() << std::endl;
+                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
+                std::cout << "Word : " << word << std::endl;
+                availableLetters.print(); std::cout <<std::endl;
+            }
+        };     
+  };
 
 #endif // SOLVER_HPP
-
-
-//stack.push({
-//    child,
-
-//    current.availableLetters.pop(letter),
-//    current.word += static_cast<char>(letter)
-//});

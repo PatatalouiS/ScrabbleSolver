@@ -2,6 +2,8 @@
 #define UTILS_HPP
 
 #include <string>
+#include "solver.hpp"
+
 
 class Utils {
 
@@ -11,5 +13,6 @@ class Utils {
         static unsigned char indexTochar(const unsigned int index);
         static std::string toRegularWord(const std::string& str);
 };
+
 
 #endif // UTILS_HPP

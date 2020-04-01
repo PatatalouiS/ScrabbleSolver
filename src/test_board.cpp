@@ -91,15 +91,13 @@ int main() {
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
 
-    Game game(DICO_PATH_TEST2, ss, {{'N', 'I', 'O', 'N', 'K', 'Y', 'T'}});
+    Game game(DICO_PATH_TEST2, ss, {{'N', 'I', 'Q', 'U', 'N', 'Y', 'O'}});
 
     Solver solver(game);
 
     solver.solveNext();
 
     std::cout << game.board << std::endl ;
-
-    //game.dico.print();
 
   return 0 ;
 }
