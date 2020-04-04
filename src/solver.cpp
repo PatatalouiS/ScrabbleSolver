@@ -12,11 +12,11 @@ Solver::Solver(Game& game) : _game(game) {
 }
 
 namespace Functors {
-    static auto plusFunc = [](unsigned char a, unsigned char b) -> char {
+    static auto plusFunc = [](char a, char b) -> char {
         return static_cast<char>(a + b);
     };
 
-    static auto minusFunc = [](unsigned char a, unsigned char b) -> char {
+    static auto minusFunc = [](char a, char b) -> char {
         return static_cast<char>(a - b);
     };
 }
@@ -25,7 +25,7 @@ const Board& Solver::solveNext() {
     auto availableStrokes = getAvailableStrokes();
 
     for(const auto& s : *availableStrokes) {
-        if(s.word == "SCRABBLERA") {
+        if(s.word == "RBEZ+AT") {
             stringstream o;
             o << s.pos;
             cout << "Word : " << s.word;
@@ -50,9 +50,9 @@ optional<SpotPos> Solver::computeNextPos(const SpotPos &start,
             ? Functors::minusFunc
             : Functors::plusFunc;
 
-    unsigned char criticalIndex;
-    unsigned char lineModifier;
-    unsigned char colModifier;
+    char criticalIndex;
+    char lineModifier;
+    char colModifier;
 
     if(direction == Direction::HORIZONTAL) {
         criticalIndex = spotUsed.indexCol;
@@ -71,36 +71,28 @@ optional<SpotPos> Solver::computeNextPos(const SpotPos &start,
         return nullopt;
     }
 
-    return SpotPos(static_cast<unsigned char>((op(spotUsed.indexLine, lineModifier))),
-                   static_cast<unsigned char>((op(spotUsed.indexCol, colModifier))));
+    return SpotPos(op(spotUsed.indexLine, lineModifier),
+                   op(spotUsed.indexCol, colModifier));
 }
 
 bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candidate) {
-    SpotPos copy(params.position);
+    SpotPos copy(*params.position);
     Direction direction = params.direction;
 
     string orthogonalWord({ static_cast<char>(candidate) });
     bool stop = false;
 
-    if(direction == Direction::HORIZONTAL) {
-       copy.indexLine--;
-    }
-    else {
-        copy.indexCol--;
-    }
+    char& criticalIndex = direction == Direction::HORIZONTAL
+            ? copy.indexLine
+            : copy.indexCol;
 
     while(!stop) {
        unsigned char nextLetter;
-       if(Utils::validIndex(copy.indexLine)) {
+       if(Utils::validIndex(criticalIndex)) {
             nextLetter = _game.board(copy).letter;
             if(nextLetter != Spot::EMPTY_SPOT) {
                 orthogonalWord += static_cast<char>(nextLetter);
-                if(direction == Direction::HORIZONTAL) {
-                     copy.indexLine--;
-                }
-                else {
-                    copy.indexCol--;
-                }
+                criticalIndex--;
             }
             else {
                 stop = true;
@@ -115,24 +107,19 @@ bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candid
     stop = false;
 
     if(direction == Direction::HORIZONTAL) {
-       copy.indexLine = params.position.indexLine + 1;
+       criticalIndex = params.position->indexLine + 1;
     }
     else {
-        copy.indexCol = params.position.indexCol + 1;
+        criticalIndex = params.position->indexCol + 1;
     }
 
     while(!stop) {
         unsigned char nextLetter;
-        if(Utils::validIndex(copy.indexLine)) {
+        if(Utils::validIndex(criticalIndex)) {
              nextLetter = _game.board(copy).letter;
              if(nextLetter != Spot::EMPTY_SPOT) {
                  orthogonalWord += static_cast<char>(nextLetter);
-                 if(direction == Direction::HORIZONTAL) {
-                      copy.indexLine++;
-                 }
-                 else {
-                     copy.indexCol++;
-                 }
+                 criticalIndex++;
              }
              else {
                  stop = true;
@@ -142,7 +129,6 @@ bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candid
             stop = true;
         }
     }
-
 
 //    if(orthogonalWord.size() > 2) {
 //        cout << " OTHER WORDS : " << "Pos : " << params.position << " Word : " << orthogonalWord << " D : " << params.direction << endl;
@@ -186,35 +172,36 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
             //current.print();
 
             Node* currentNode = current.node;
-            SpotPos currentPos = current.position;
-            Spot currentSpot = _game.board(currentPos);
+            optional<SpotPos> currentPos = current.position;
             PlayerBag currentLetters = current.availableLetters;
             string currentWord = current.word;
             PlusStatus currentPlusStatus = current.plusStatus;
             Direction currentDirection = current.direction;
+            Spot currentSpot;
             stack.pop();
 
             //// CASE LIBRE, SPOT COURANT LIBRE ////
 
-            if(currentSpot.letter == Spot::EMPTY_SPOT) {
+            if(currentPos) {
+                currentSpot = _game.board(*currentPos);
+
+                if(currentSpot.letter == Spot::EMPTY_SPOT) {
 
                 // SI c'est un noeud final, on ajoute le mot
-                if(currentNode->isFinal()) {
-                    string regular = Utils::toRegularWord(currentWord);
-                    array->insert({{ regular, startPos, currentDirection }});
-                }
+                    if(currentNode->isFinal()) {
+                        string regular = Utils::toRegularWord(currentWord);
+                        array->insert({{ currentWord, startPos, currentDirection }});
+                    }
 
-                auto newPos = computeNextPos(startPos, currentPos, currentPlusStatus, currentDirection);
-                // Si la prochaine position de curseur est valide
-                if(newPos) {
-                    // parcours du tableau de lettre possibles
+                    auto newPos = computeNextPos(startPos, *currentPos, currentPlusStatus, currentDirection);
+                    // Si la prochaine position de curseur est valide
+                        // parcours du tableau de lettre possibles
                     for(unsigned char letter : currentLetters.data()) {
                         Node* child = currentNode->getChildByLetter(letter);
 
                         // l'enfant associé a la lettre existe
                         if(child != Node::NO_NODE) {
-
-                            if(checkOtherWords(current, letter)) {
+                           if(checkOtherWords(current, letter)) {
                                 stack.push({
                                     child,
                                     *newPos,
@@ -227,17 +214,15 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
                             // On insère
                         }
                     }
-                }
 
-                // si le plus n'a pas été utilisé
-                if(currentPlusStatus == PlusStatus::NOT_USED) {
-                    Node* linkChild = currentNode->getChildByLetter(LINK_LETTER);
-                    // et qu'il n'est pas nullptr
-                    if(linkChild != Node::NO_NODE) {
-                        // et que la position générée est valide, on l'ajoute
-                        auto newPos = computeNextPos(startPos, currentPos, PlusStatus::IN_USE, currentDirection);
+                    // si le plus n'a pas été utilisé
+                    if(currentPlusStatus == PlusStatus::NOT_USED) {
+                        Node* linkChild = currentNode->getChildByLetter(LINK_LETTER);
+                        // et qu'il n'est pas nullptr
+                        if(linkChild != Node::NO_NODE) {
+                            // et que la position générée est valide, on l'ajoute
+                            auto newPos = computeNextPos(startPos, *currentPos, PlusStatus::IN_USE, currentDirection);
 
-                        if(newPos) {
                             stack.push({
                                 linkChild,
                                 *newPos,
@@ -249,18 +234,16 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
                         }
                     }
                 }
-            }
             //// CASE OCCUPEE, SPOT PRIS ////
 
-            else {
-                unsigned char forcedLetter = currentSpot.letter;
-                Node* forcedNode = currentNode->getChildByLetter(forcedLetter);
-                // lettre forcée compatible dans le Gaddagg
-                if(forcedNode != Node::NO_NODE) {
+                else {
+                    unsigned char forcedLetter = currentSpot.letter;
+                    Node* forcedNode = currentNode->getChildByLetter(forcedLetter);
+                    // lettre forcée compatible dans le Gaddagg
+                    if(forcedNode != Node::NO_NODE) {
 
-                    auto newPos = computeNextPos(startPos, currentPos, currentPlusStatus, currentDirection);
-                    // si la position générée est valide, on avance
-                    if(newPos) {
+                        auto newPos = computeNextPos(startPos, *currentPos, currentPlusStatus, currentDirection);
+                        // si la position générée est valide, on avance
                         stack.push({
                             forcedNode,
                             *newPos,
@@ -299,7 +282,8 @@ unique_ptr<Solver::NeighborsSet> Solver::getNeighBors() {
                     const unsigned char indexCol = s.indexCol;
 
                     if(_game.board(indexLine, indexCol).letter == Spot::EMPTY_SPOT) {
-                        set->insert({{ indexLine, indexCol }});
+                        set->insert({{ static_cast<char>(indexLine),
+                                       static_cast<char>(indexCol) }});
                     }
                 }
             }

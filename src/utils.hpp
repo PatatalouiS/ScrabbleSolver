@@ -15,8 +15,8 @@
             static unsigned int charToIndex(const unsigned char letter);
             static unsigned char indexTochar(const unsigned int index);
             static std::string toRegularWord(const std::string& str);
-            static bool validIndex(const unsigned char index);
-            //static bool validSpot(const SpotPos& spot);
+            static bool validIndex(const char index);
+            static bool validSpot(const SpotPos& spot);
     };
 
 

@@ -7,10 +7,10 @@
 
 struct SpotPos {
 
-    unsigned char indexLine;
-    unsigned char indexCol;
+    char indexLine;
+    char indexCol;
 
-    SpotPos(unsigned char l = 0, unsigned char c = 0) :
+    SpotPos(char l = 0, char c = 0) :
         indexLine(l),
         indexCol(c) {
     }
@@ -31,7 +31,7 @@ namespace std {
     template<>
     struct hash<SpotPos> {
         size_t operator()(const SpotPos& pos) const {
-            auto hash = std::hash<unsigned char>();
+            auto hash = std::hash<char>();
             return hash(pos.indexLine) ^ (hash(pos.indexCol) << 1);
         }
     };

@@ -30,18 +30,18 @@ class Solver {
 
         struct SearchingParams {
             Node* node;
-            SpotPos position;
+            std::optional<SpotPos> position;
             PlayerBag availableLetters;
             std::string word;
             PlusStatus plusStatus;
             Direction direction;
 
-            void print() {
-                std::cout << "value : " << node->getLetter() << std::endl;
-                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
-                std::cout << "Word : " << word << std::endl;
-                availableLetters.print(); std::cout <<std::endl;
-            }
+//            void print() {
+//                std::cout << "value : " << node->getLetter() << std::endl;
+//                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
+//                std::cout << "Word : " << word << std::endl;
+//                availableLetters.print(); std::cout <<std::endl;
+//            }
         };
 
         Game& _game;

@@ -42,10 +42,10 @@ string Utils::toRegularWord(const string& str) {
     return out;
 }
 
-bool Utils::validIndex(const unsigned char index) {
-    return (index >= 0) && (index < Board::SIZE);
+bool Utils::validIndex(const char index) {
+    return (index >= 0) && (index < static_cast<char>(Board::SIZE));
 }
 
-//bool Utils::validSpot(const SpotPos &spot) {
-//    return validIndex(spot.indexLine) && validIndex(spot.indexCol);
-//}
+bool Utils::validSpot(const SpotPos &spot) {
+    return validIndex(spot.indexLine) && validIndex(spot.indexCol);
+}
