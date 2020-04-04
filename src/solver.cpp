@@ -1,4 +1,4 @@
-#include "solver.hpp"
+﻿#include "solver.hpp"
 #include <iostream>
 #include "utils.hpp"
 #include <array>
@@ -25,11 +25,9 @@ const Board& Solver::solveNext() {
     auto availableStrokes = getAvailableStrokes();
 
     for(const auto& s : *availableStrokes) {
-
-        stringstream o;
-        o << s.pos;
-
-        if(s.word == "JOUEZ") {
+        if(s.word == "SCRABBLERA") {
+            stringstream o;
+            o << s.pos;
             cout << "Word : " << s.word;
             cout << "| Pos : " << int(s.pos.indexLine)<< " , " << int(s.pos.indexCol);
             cout << "| Direction : " << s.direction << endl;
@@ -69,12 +67,90 @@ optional<SpotPos> Solver::computeNextPos(const SpotPos &start,
 
     char computedIndex = op(criticalIndex, 1);
 
-    if((unsigned(computedIndex) >= Board::SIZE) || (computedIndex < 0)) {
+    if((computedIndex < 0) || (computedIndex >= int(Board::SIZE))) {
         return nullopt;
     }
 
-    return SpotPos(static_cast<unsigned char>((op(start.indexLine, lineModifier))),
-                   static_cast<unsigned char>((op(start.indexCol, colModifier))));
+    return SpotPos(static_cast<unsigned char>((op(spotUsed.indexLine, lineModifier))),
+                   static_cast<unsigned char>((op(spotUsed.indexCol, colModifier))));
+}
+
+bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candidate) {
+    SpotPos copy(params.position);
+    Direction direction = params.direction;
+
+    string orthogonalWord({ static_cast<char>(candidate) });
+    bool stop = false;
+
+    if(direction == Direction::HORIZONTAL) {
+       copy.indexLine--;
+    }
+    else {
+        copy.indexCol--;
+    }
+
+    while(!stop) {
+       unsigned char nextLetter;
+       if(Utils::validIndex(copy.indexLine)) {
+            nextLetter = _game.board(copy).letter;
+            if(nextLetter != Spot::EMPTY_SPOT) {
+                orthogonalWord += static_cast<char>(nextLetter);
+                if(direction == Direction::HORIZONTAL) {
+                     copy.indexLine--;
+                }
+                else {
+                    copy.indexCol--;
+                }
+            }
+            else {
+                stop = true;
+            }
+       }
+       else {
+           stop = true;
+       }
+    }
+
+    orthogonalWord += (static_cast<char>(LINK_LETTER));
+    stop = false;
+
+    if(direction == Direction::HORIZONTAL) {
+       copy.indexLine = params.position.indexLine + 1;
+    }
+    else {
+        copy.indexCol = params.position.indexCol + 1;
+    }
+
+    while(!stop) {
+        unsigned char nextLetter;
+        if(Utils::validIndex(copy.indexLine)) {
+             nextLetter = _game.board(copy).letter;
+             if(nextLetter != Spot::EMPTY_SPOT) {
+                 orthogonalWord += static_cast<char>(nextLetter);
+                 if(direction == Direction::HORIZONTAL) {
+                      copy.indexLine++;
+                 }
+                 else {
+                     copy.indexCol++;
+                 }
+             }
+             else {
+                 stop = true;
+             }
+        }
+        else {
+            stop = true;
+        }
+    }
+
+
+//    if(orthogonalWord.size() > 2) {
+//        cout << " OTHER WORDS : " << "Pos : " << params.position << " Word : " << orthogonalWord << " D : " << params.direction << endl;
+//    }
+
+    return orthogonalWord.size() > 2
+            ? _game.dico.searchPrivate(orthogonalWord)
+            : true;
 }
 
 unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
@@ -108,6 +184,7 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
             // read top of the stack
             SearchingParams current = stack.top();
             //current.print();
+
             Node* currentNode = current.node;
             SpotPos currentPos = current.position;
             Spot currentSpot = _game.board(currentPos);
@@ -136,15 +213,18 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
 
                         // l'enfant associé a la lettre existe
                         if(child != Node::NO_NODE) {
+
+                            if(checkOtherWords(current, letter)) {
+                                stack.push({
+                                    child,
+                                    *newPos,
+                                    currentLetters.pop(letter),
+                                    string(currentWord) += static_cast<char>(letter),
+                                    currentPlusStatus,
+                                    currentDirection
+                                });
+                            }
                             // On insère
-                            stack.push({
-                                child,
-                                *newPos,
-                                currentLetters.pop(letter),
-                                string(currentWord) += static_cast<char>(letter),
-                                currentPlusStatus,
-                                currentDirection
-                            });
                         }
                     }
                 }

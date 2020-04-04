@@ -159,9 +159,7 @@ bool Gaddag::searchPrivate(const string& word, Node* start) const {
         current = nextNode;
 
         if(wordIterator == lastLetter) {
-            return current->isFinal()
-                ? true
-                : false;
+            return current->isFinal();
         }
         wordIterator++;
     }

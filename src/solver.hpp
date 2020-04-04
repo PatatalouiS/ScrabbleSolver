@@ -22,24 +22,11 @@ class Solver {
 
     private:
 
-        Game& _game;
-
-        std::unique_ptr<StrokesSet> getAvailableStrokes();
-
-        std::unique_ptr<NeighborsSet> getNeighBors();
-
         enum class PlusStatus {
             USED,
             IN_USE,
             NOT_USED
         };
-
-        std::optional<SpotPos> computeNextPos(
-                const SpotPos& start,
-                const SpotPos& current,
-                const PlusStatus& plusStatus,
-                const Direction direction
-        );
 
         struct SearchingParams {
             Node* node;
@@ -55,7 +42,23 @@ class Solver {
                 std::cout << "Word : " << word << std::endl;
                 availableLetters.print(); std::cout <<std::endl;
             }
-        };     
+        };
+
+        Game& _game;
+
+        std::unique_ptr<StrokesSet> getAvailableStrokes();
+
+        std::unique_ptr<NeighborsSet> getNeighBors();
+
+        bool checkOtherWords(const SearchingParams& params,
+                             unsigned char candidate);
+
+        std::optional<SpotPos> computeNextPos(
+                const SpotPos& start,
+                const SpotPos& current,
+                const PlusStatus& plusStatus,
+                const Direction direction
+        );
   };
 
 

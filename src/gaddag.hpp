@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 
 #include "node.hpp"
 
@@ -32,6 +33,8 @@ class Gaddag {
 
         bool search(const std::string& word) const;
 
+        bool searchPrivate(const std::string& word, Node* start = nullptr) const;
+
         void print() const;
 
     private:
@@ -41,8 +44,6 @@ class Gaddag {
         using WordPair = std::pair<Node*, std::string>;
 
         std::unique_ptr<WordsArray> getWordsArray(const std::string& word) const;
-
-        bool searchPrivate(const std::string& word, Node* start = nullptr) const;
 
         Gaddag& addWordPrivate(const std::string& word);
 

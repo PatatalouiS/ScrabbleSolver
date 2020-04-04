@@ -83,14 +83,14 @@ int main() {
     ss << "..............." << std::endl ;
     ss << "....PROJET....." << std::endl ;
     ss << ".......O......." << std::endl ;
-    ss << ".......U......." << std::endl ;
+    ss << "....IGOUILLA..." << std::endl ;
     ss << ".......E......." << std::endl ;
     ss << ".......U......." << std::endl ;
     ss << ".....SCRABBLE.." << std::endl ;
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
 
-    Game game(DICO_PATH, ss, {{'A', 'O', 'U', 'J', 'Z', 'E', 'P'}});
+    Game game(DICO_PATH, ss, {{'Z', 'E', 'N', 'R', 'R', 'Z', 'I'}});
 
     Solver solver(game);
 

@@ -20,7 +20,7 @@ struct Board {
   void load(std::istream& in) ;
 
   //access to the spots by coordinates
-  Spot operator()(unsigned char l, unsigned char c) const ;
+  Spot operator()(unsigned char ql, unsigned char c) const ;
   Spot& operator()(unsigned char l, unsigned char c) ;
 
   Spot operator() (const SpotPos& sp) const;

@@ -41,3 +41,11 @@ string Utils::toRegularWord(const string& str) {
 
     return out;
 }
+
+bool Utils::validIndex(const unsigned char index) {
+    return (index >= 0) && (index < Board::SIZE);
+}
+
+//bool Utils::validSpot(const SpotPos &spot) {
+//    return validIndex(spot.indexLine) && validIndex(spot.indexCol);
+//}
