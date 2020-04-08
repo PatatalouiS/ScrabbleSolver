@@ -1,6 +1,7 @@
 #include "utils.hpp"
 #include <cassert>
 #include <vector>
+#include "stroke.hpp"
 
 using namespace std;
 

@@ -255,8 +255,8 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
                     }
                 }
             }
-        } // while stack
-    } // loop on each empty
+        }
+    }
 
     return array;
 }
