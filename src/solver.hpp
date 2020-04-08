@@ -5,6 +5,7 @@
 #include "stroke.hpp"
 #include <vector>
 #include <set>
+#include <stack>
 #include <optional>
 #include <iostream>
 #include <utility>
@@ -31,6 +32,7 @@ class Solver {
         struct SearchingParams {
             Node* node;
             SpotPos position;
+            SpotPos startPos;
             PlayerBag availableLetters;
             std::string word;
             PlusStatus plusStatus;
@@ -55,12 +57,10 @@ class Solver {
         bool checkOtherWords(const SearchingParams& params,
                              unsigned char candidate);
 
-        std::optional<SpotPos> computeNextPos(
-                const SpotPos& start,
-                const SpotPos& current,
-                const PlusStatus& plusStatus,
-                const Direction direction
-        );
+        std::optional<SpotPos> computeNextPos(const SearchingParams& params);
+
+        void followForcedRoot(const SearchingParams& params,
+                              std::stack<SearchingParams>& stack);
   };
 
 
