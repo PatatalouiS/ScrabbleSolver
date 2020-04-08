@@ -1,10 +1,12 @@
 ﻿#include "solver.hpp"
 #include <iostream>
 #include "utils.hpp"
+#include "letterbag.hpp"
 #include <array>
 #include <unordered_set>
 #include <stack>
 #include <sstream>
+#include <cassert>
 
 using namespace std;
 
@@ -25,12 +27,13 @@ const Board& Solver::solveNext() {
     auto availableStrokes = getAvailableStrokes();
 
     for(const auto& s : *availableStrokes) {
-        if(s.word == "RBEZ+AT") {
+        if(s.word == "ZEBRAT") {
             stringstream o;
             o << s.pos;
             cout << "Word : " << s.word;
             cout << "| Pos : " << int(s.pos.indexLine)<< " , " << int(s.pos.indexCol);
-            cout << "| Direction : " << s.direction << endl;
+            cout << "| Direction : " << s.direction;
+            cout << "| Score : " << s.score << endl;
         }
     }
 
@@ -67,7 +70,9 @@ optional<SpotPos> Solver::computeNextPos(const SpotPos &start,
 
     char computedIndex = op(criticalIndex, 1);
 
-    if((computedIndex < 0) || (computedIndex >= int(Board::SIZE))) {
+
+
+    if(!Utils::validIndex(computedIndex)) {
         return nullopt;
     }
 
@@ -85,6 +90,8 @@ bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candid
     char& criticalIndex = direction == Direction::HORIZONTAL
             ? copy.indexLine
             : copy.indexCol;
+
+    criticalIndex --;
 
     while(!stop) {
        unsigned char nextLetter;
@@ -130,8 +137,8 @@ bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candid
         }
     }
 
-//    if(orthogonalWord.size() > 2) {
-//        cout << " OTHER WORDS : " << "Pos : " << params.position << " Word : " << orthogonalWord << " D : " << params.direction << endl;
+//    if(orthogonalWord.size() > 2 && params.position->indexLine == 13) {
+//        cout << " OTHER WORDS : " << "Pos : " << *params.position << " Word : " << orthogonalWord << " D : " << params.direction << endl;
 //    }
 
     return orthogonalWord.size() > 2
@@ -148,7 +155,7 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
     for(const SpotPos& position : *startCellsArray) {
         SpotPos startPos(position.indexLine, position.indexCol);
 
-        cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
+        //cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
 
         stack<SearchingParams> stack ({{
             _game.dico.getHead(),
@@ -156,14 +163,18 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
             _game.playerBag,
             "",
             PlusStatus::NOT_USED,
-            Direction::HORIZONTAL
+            Direction::HORIZONTAL,
+            0,
+            1
         },{
            _game.dico.getHead(),
            startPos,
            _game.playerBag,
            "",
            PlusStatus::NOT_USED,
-           Direction::VERTICAL
+           Direction::VERTICAL,
+           0,
+           1
         }});
 
         while(!stack.empty()) {
@@ -178,11 +189,12 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
             PlusStatus currentPlusStatus = current.plusStatus;
             Direction currentDirection = current.direction;
             Spot currentSpot;
+            unsigned int currentScore = current.score;
             stack.pop();
 
             //// CASE LIBRE, SPOT COURANT LIBRE ////
 
-            if(currentPos) {
+            if(currentPos.has_value()) {
                 currentSpot = _game.board(*currentPos);
 
                 if(currentSpot.letter == Spot::EMPTY_SPOT) {
@@ -190,7 +202,7 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
                 // SI c'est un noeud final, on ajoute le mot
                     if(currentNode->isFinal()) {
                         string regular = Utils::toRegularWord(currentWord);
-                        array->insert({{ currentWord, startPos, currentDirection }});
+                        array->insert({{ regular, startPos, currentDirection, currentScore * current.factor }});
                     }
 
                     auto newPos = computeNextPos(startPos, *currentPos, currentPlusStatus, currentDirection);
@@ -199,16 +211,23 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
                     for(unsigned char letter : currentLetters.data()) {
                         Node* child = currentNode->getChildByLetter(letter);
 
+                        //if((currentWord.back() != LINK_LETTER) && (!currentWord.empty())) {
+                            unsigned int score = LetterBag::getLetterPoints(letter)
+                                * currentSpot.bonus.letter_factor;
+                        //}
+
                         // l'enfant associé a la lettre existe
                         if(child != Node::NO_NODE) {
                            if(checkOtherWords(current, letter)) {
                                 stack.push({
                                     child,
-                                    *newPos,
+                                    newPos,
                                     currentLetters.pop(letter),
                                     string(currentWord) += static_cast<char>(letter),
                                     currentPlusStatus,
-                                    currentDirection
+                                    currentDirection,
+                                    currentScore + score,
+                                    current.factor * currentSpot.bonus.word_factor
                                 });
                             }
                             // On insère
@@ -225,11 +244,13 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
 
                             stack.push({
                                 linkChild,
-                                *newPos,
+                                newPos,
                                 currentLetters,
                                 string(currentWord) += static_cast<char>(LINK_LETTER),
                                 PlusStatus::USED,
-                                currentDirection
+                                currentDirection,
+                                currentScore,
+                                current.factor
                             });
                         }
                     }
@@ -241,16 +262,17 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
                     Node* forcedNode = currentNode->getChildByLetter(forcedLetter);
                     // lettre forcée compatible dans le Gaddagg
                     if(forcedNode != Node::NO_NODE) {
-
                         auto newPos = computeNextPos(startPos, *currentPos, currentPlusStatus, currentDirection);
                         // si la position générée est valide, on avance
                         stack.push({
                             forcedNode,
-                            *newPos,
+                            newPos,
                             currentLetters,
                             string(currentWord) += static_cast<char>(forcedLetter),
                             currentPlusStatus,
-                            currentDirection
+                            currentDirection,
+                            currentScore + LetterBag::getLetterPoints(forcedLetter),
+                            current.factor
                         });
                     }
                 }

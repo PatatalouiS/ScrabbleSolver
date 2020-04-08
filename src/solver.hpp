@@ -35,6 +35,8 @@ class Solver {
             std::string word;
             PlusStatus plusStatus;
             Direction direction;
+            unsigned int score;
+            unsigned int factor;
 
 //            void print() {
 //                std::cout << "value : " << node->getLetter() << std::endl;

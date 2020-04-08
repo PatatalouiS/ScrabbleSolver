@@ -28,9 +28,10 @@ struct Stroke {
     std::string word;
     SpotPos pos;
     Direction direction;
+    unsigned int score;
 
-    Stroke(const std::string& w, const SpotPos& p, const Direction d) :
-        word(w), pos(p), direction(d){
+    Stroke(const std::string& w, const SpotPos& p, const Direction d, const unsigned int s) :
+        word(w), pos(p), direction(d), score(s){
     }
 
     bool operator==(const Stroke& other) const {
