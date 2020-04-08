@@ -81,7 +81,7 @@ optional<SpotPos> Solver::computeNextPos(const SpotPos &start,
 }
 
 bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candidate) {
-    SpotPos copy(*params.position);
+    SpotPos copy(params.position);
     Direction direction = params.direction;
 
     string orthogonalWord({ static_cast<char>(candidate) });
@@ -114,10 +114,10 @@ bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candid
     stop = false;
 
     if(direction == Direction::HORIZONTAL) {
-       criticalIndex = params.position->indexLine + 1;
+       criticalIndex = params.position.indexLine + 1;
     }
     else {
-        criticalIndex = params.position->indexCol + 1;
+        criticalIndex = params.position.indexCol + 1;
     }
 
     while(!stop) {
@@ -155,7 +155,7 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
     for(const SpotPos& position : *startCellsArray) {
         SpotPos startPos(position.indexLine, position.indexCol);
 
-        //cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
+        cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
 
         stack<SearchingParams> stack ({{
             _game.dico.getHead(),
@@ -180,103 +180,108 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
         while(!stack.empty()) {
             // read top of the stack
             SearchingParams current = stack.top();
-            //current.print();
-
             Node* currentNode = current.node;
-            optional<SpotPos> currentPos = current.position;
+            SpotPos currentPos = current.position;
             PlayerBag currentLetters = current.availableLetters;
             string currentWord = current.word;
             PlusStatus currentPlusStatus = current.plusStatus;
             Direction currentDirection = current.direction;
             Spot currentSpot;
+            unsigned int currentFactor = current.factor;
             unsigned int currentScore = current.score;
             stack.pop();
 
             //// CASE LIBRE, SPOT COURANT LIBRE ////
 
-            if(currentPos.has_value()) {
-                currentSpot = _game.board(*currentPos);
+            currentSpot = _game.board(currentPos);
 
-                if(currentSpot.letter == Spot::EMPTY_SPOT) {
+            if(currentSpot.letter == Spot::EMPTY_SPOT) {
 
-                // SI c'est un noeud final, on ajoute le mot
-                    if(currentNode->isFinal()) {
-                        string regular = Utils::toRegularWord(currentWord);
-                        array->insert({{ regular, startPos, currentDirection, currentScore * current.factor }});
-                    }
+                // Si le noeud est final
+                if(currentNode->isFinal()) {
+                    string regular = Utils::toRegularWord(currentWord);
+                    array->insert({{ regular, startPos, currentDirection,
+                                     currentScore * current.factor }});
+                }
 
-                    auto newPos = computeNextPos(startPos, *currentPos, currentPlusStatus, currentDirection);
-                    // Si la prochaine position de curseur est valide
-                        // parcours du tableau de lettre possibles
-                    for(unsigned char letter : currentLetters.data()) {
-                        Node* child = currentNode->getChildByLetter(letter);
+                auto newPos = computeNextPos(startPos, currentPos, currentPlusStatus, currentDirection);
 
-                        //if((currentWord.back() != LINK_LETTER) && (!currentWord.empty())) {
-                            unsigned int score = LetterBag::getLetterPoints(letter)
-                                * currentSpot.bonus.letter_factor;
-                        //}
+                // parcours du tableau de lettre possibles
+                for(unsigned char letter : currentLetters.data()) {
+                    Node* child = currentNode->getChildByLetter(letter);
+                    // l'enfant associé a la lettre existe
+                    if(child != Node::NO_NODE) {
+                        unsigned int score = LetterBag::getLetterPoints(letter)
+                            * currentSpot.bonus.letter_factor;
 
-                        // l'enfant associé a la lettre existe
-                        if(child != Node::NO_NODE) {
-                           if(checkOtherWords(current, letter)) {
-                                stack.push({
-                                    child,
-                                    newPos,
-                                    currentLetters.pop(letter),
-                                    string(currentWord) += static_cast<char>(letter),
-                                    currentPlusStatus,
-                                    currentDirection,
-                                    currentScore + score,
-                                    current.factor * currentSpot.bonus.word_factor
-                                });
-                            }
-                            // On insère
+                        if(child->isFinal() && !newPos) {
+                            string regular = Utils::toRegularWord(currentWord += static_cast<char>(letter));
+                            array->insert({{ regular, startPos, currentDirection,
+                                             (currentScore + score) *
+                                             (currentFactor * currentSpot.bonus.word_factor) }});
+                        }
+                        else if(newPos && checkOtherWords(current, letter)) {
+                            stack.push({
+                                child,
+                                *newPos,
+                                currentLetters.pop(letter),
+                                string(currentWord) += static_cast<char>(letter),
+                                currentPlusStatus,
+                                currentDirection,
+                                currentScore + score,
+                                currentFactor * currentSpot.bonus.word_factor
+                            });
                         }
                     }
+                }
 
-                    // si le plus n'a pas été utilisé
-                    if(currentPlusStatus == PlusStatus::NOT_USED) {
-                        Node* linkChild = currentNode->getChildByLetter(LINK_LETTER);
-                        // et qu'il n'est pas nullptr
-                        if(linkChild != Node::NO_NODE) {
-                            // et que la position générée est valide, on l'ajoute
-                            auto newPos = computeNextPos(startPos, *currentPos, PlusStatus::IN_USE, currentDirection);
+                // si le plus n'a pas été utilisé
+                if(currentPlusStatus == PlusStatus::NOT_USED) {
+                    Node* linkChild = currentNode->getChildByLetter(LINK_LETTER);
+                    // et qu'il n'est pas nullptr
+                    if(linkChild != Node::NO_NODE) {
+                        // et que la position générée est valide, on l'ajoute
+                        auto newPos = computeNextPos(startPos, currentPos, PlusStatus::IN_USE, currentDirection);
 
+                        if(newPos.has_value()) {
                             stack.push({
                                 linkChild,
-                                newPos,
+                                *newPos,
                                 currentLetters,
                                 string(currentWord) += static_cast<char>(LINK_LETTER),
                                 PlusStatus::USED,
                                 currentDirection,
                                 currentScore,
-                                current.factor
+                                currentFactor
                             });
                         }
                     }
                 }
-            //// CASE OCCUPEE, SPOT PRIS ////
+            }
+        //// CASE OCCUPEE, SPOT PRIS ////
 
-                else {
-                    unsigned char forcedLetter = currentSpot.letter;
-                    Node* forcedNode = currentNode->getChildByLetter(forcedLetter);
-                    // lettre forcée compatible dans le Gaddagg
-                    if(forcedNode != Node::NO_NODE) {
-                        auto newPos = computeNextPos(startPos, *currentPos, currentPlusStatus, currentDirection);
-                        // si la position générée est valide, on avance
+            else {
+                unsigned char forcedLetter = currentSpot.letter;
+                Node* forcedNode = currentNode->getChildByLetter(forcedLetter);
+                // lettre forcée compatible dans le Gaddagg
+                if(forcedNode != Node::NO_NODE) {
+                    auto newPos = computeNextPos(startPos, currentPos, currentPlusStatus, currentDirection);
+
+                    if(newPos.has_value()) {
                         stack.push({
                             forcedNode,
-                            newPos,
+                            *newPos,
                             currentLetters,
                             string(currentWord) += static_cast<char>(forcedLetter),
                             currentPlusStatus,
                             currentDirection,
                             currentScore + LetterBag::getLetterPoints(forcedLetter),
-                            current.factor
+                            currentFactor
                         });
                     }
                 }
             }
+
         }
     }
 

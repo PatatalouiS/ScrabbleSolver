@@ -30,7 +30,7 @@ class Solver {
 
         struct SearchingParams {
             Node* node;
-            std::optional<SpotPos> position;
+            SpotPos position;
             PlayerBag availableLetters;
             std::string word;
             PlusStatus plusStatus;

@@ -81,7 +81,7 @@ int main() {
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
-    ss << "....PRO.ET....." << std::endl ;
+    ss << "....PROJET....." << std::endl ;
     ss << ".......O......." << std::endl ;
     ss << ".......U......." << std::endl ;
     ss << ".......E......." << std::endl ;
