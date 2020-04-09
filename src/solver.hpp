@@ -61,6 +61,13 @@ class Solver {
 
         void followForcedRoot(const SearchingParams& params,
                               std::stack<SearchingParams>& stack);
+
+        void followPlusRoot(SearchingParams& params,
+                            std::stack<SearchingParams>& stack);
+
+        void followPlayerBagRoots(SearchingParams& params,
+                                  std::stack<SearchingParams>& stack,
+                                  std::unique_ptr<StrokesSet>& result);
   };
 
 

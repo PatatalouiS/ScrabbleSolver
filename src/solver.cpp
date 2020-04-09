@@ -67,8 +67,6 @@ optional<SpotPos> Solver::computeNextPos(const SearchingParams& params) {
 
     char computedIndex = op(criticalIndex, 1);
 
-
-
     if(!Utils::validIndex(computedIndex)) {
         return nullopt;
     }
@@ -148,127 +146,94 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
     unique_ptr<StrokesSet> array = make_unique<StrokesSet>();
     // array of start cells, to begin serach
     unique_ptr<NeighborsSet> startCellsArray = getNeighBors();
+    // stack for store states of research
+    stack<SearchingParams> stack;
 
     for(const SpotPos& position : *startCellsArray) {
         SpotPos startPos(position.indexLine, position.indexCol);
+        //cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
+        SearchingParams startParams ({
+             _game.dico.getHead(),
+             startPos,
+             startPos,
+             _game.playerBag,
+             "",
+             PlusStatus::NOT_USED,
+             Direction::HORIZONTAL,
+             0,
+             1
+        });
 
-        cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
-
-        stack<SearchingParams> stack ({{
-            _game.dico.getHead(),
-            startPos,
-            startPos,
-            _game.playerBag,
-            "",
-            PlusStatus::NOT_USED,
-            Direction::HORIZONTAL,
-            0,
-            1
-        },{
-           _game.dico.getHead(),
-           startPos,
-           startPos,
-           _game.playerBag,
-           "",
-           PlusStatus::NOT_USED,
-           Direction::VERTICAL,
-           0,
-           1
-        }});
+        stack.push(startParams);
+        startParams.direction = Direction::VERTICAL;
+        stack.push(startParams);
 
         while(!stack.empty()) {
             // read top of the stack
-            SearchingParams current = stack.top();
-            Node* currentNode = current.node;
-            SpotPos currentPos = current.position;
-            PlayerBag currentLetters = current.availableLetters;
-            string currentWord = current.word;
-            PlusStatus currentPlusStatus = current.plusStatus;
-            Direction currentDirection = current.direction;
-            Spot currentSpot;
-            unsigned int currentFactor = current.factor;
-            unsigned int currentScore = current.score;
+            SearchingParams currentParams = stack.top();
             stack.pop();
+            Spot currentSpot = _game.board(currentParams.position);
 
-            //// CASE LIBRE, SPOT COURANT LIBRE ////
-
-            currentSpot = _game.board(currentPos);
-
+            // there is no letter in the board at currentSpot
             if(currentSpot.letter == Spot::EMPTY_SPOT) {
-
-                // Si le noeud est final
-                if(currentNode->isFinal()) {
-                    string regular = Utils::toRegularWord(currentWord);
-                    array->insert({{ regular, startPos, currentDirection,
-                                     currentScore * current.factor }});
-                }
-
-                auto newPos = computeNextPos(current);
-
-                // parcours du tableau de lettre possibles
-                for(unsigned char letter : currentLetters.data()) {
-                    Node* child = currentNode->getChildByLetter(letter);
-                    // l'enfant associé a la lettre existe
-                    if(child != Node::NO_NODE) {
-                        unsigned int score = LetterBag::getLetterPoints(letter)
-                            * currentSpot.bonus.letter_factor;
-
-                        if(child->isFinal() && !newPos) {
-                            string regular = Utils::toRegularWord(currentWord += static_cast<char>(letter));
-                            array->insert({{ regular, startPos, currentDirection,
-                                             (currentScore + score) *
-                                             (currentFactor * currentSpot.bonus.word_factor) }});
-                        }
-                        else if(newPos && checkOtherWords(current, letter)) {
-                            stack.push({
-                                child,
-                                *newPos,
-                                startPos,
-                                currentLetters.pop(letter),
-                                string(currentWord) += static_cast<char>(letter),
-                                currentPlusStatus,
-                                currentDirection,
-                                currentScore + score,
-                                currentFactor * currentSpot.bonus.word_factor
-                            });
-                        }
-                    }
-                }
-
-                // si le plus n'a pas été utilisé
-                if(currentPlusStatus == PlusStatus::NOT_USED) {
-                    Node* linkChild = currentNode->getChildByLetter(LINK_LETTER);
-                    // et qu'il n'est pas nullptr
-                    if(linkChild != Node::NO_NODE) {
-                        // et que la position générée est valide, on l'ajoute
-                        current.plusStatus = PlusStatus::IN_USE;
-                        auto newPos = computeNextPos(current);
-
-                        if(newPos.has_value()) {
-                            stack.push({
-                                linkChild,
-                                *newPos,
-                                startPos,
-                                currentLetters,
-                                string(currentWord) += static_cast<char>(LINK_LETTER),
-                                PlusStatus::USED,
-                                currentDirection,
-                                currentScore,
-                                currentFactor
-                            });
-                        }
-                    }
+                followPlayerBagRoots(currentParams, stack, array);
+                // Use the Plus root if it's not already used
+                if(currentParams.plusStatus == PlusStatus::NOT_USED) {
+                    followPlusRoot(currentParams, stack);
                 }
             }
-            //// CASE OCCUPEE, SPOT PRIS ////
+            // There is a letter in the the board at currentSpot
             else {
-                followForcedRoot(current, stack);
+                followForcedRoot(currentParams, stack);
             }
         }
     }
 
     return array;
 }
+
+void Solver::followPlayerBagRoots(SearchingParams &params, std::stack<SearchingParams> &stack,
+                                  unique_ptr<StrokesSet>& result) {
+    if(params.node->isFinal()) {
+        string regular = Utils::toRegularWord(params.word);
+        result->insert({{ regular, params.startPos, params.direction,
+                         params.score * params.factor }});
+    }
+
+    Spot& currentSpot = _game.board(params.position);
+    auto newPos = computeNextPos(params);
+
+    // parcours du tableau de lettre possibles
+    for(unsigned char letter : params.availableLetters.data()) {
+        Node* child = params.node->getChildByLetter(letter);
+        // l'enfant associé a la lettre existe
+        if(child != Node::NO_NODE) {
+            unsigned int score = LetterBag::getLetterPoints(letter)
+                * currentSpot.bonus.letter_factor;
+
+            if(child->isFinal() && !newPos) {
+                string regular = Utils::toRegularWord(params.word += static_cast<char>(letter));
+                result->insert({{ regular, params.startPos, params.direction,
+                                 (params.score + score) *
+                                 (params.factor * currentSpot.bonus.word_factor) }});
+            }
+            else if(newPos && checkOtherWords(params, letter)) {
+                stack.push({
+                    child,
+                    *newPos,
+                    params.startPos,
+                    params.availableLetters.pop(letter),
+                    string(params.word) += static_cast<char>(letter),
+                    params.plusStatus,
+                    params.direction,
+                    params.score + score,
+                    params.factor * currentSpot.bonus.word_factor
+                });
+            }
+        }
+    }
+}
+
 
 void Solver::followForcedRoot(const SearchingParams &params, stack<SearchingParams>& stack) {
     unsigned char forcedLetter = _game.board(params.position).letter;
@@ -288,6 +253,30 @@ void Solver::followForcedRoot(const SearchingParams &params, stack<SearchingPara
                 params.plusStatus,
                 params.direction,
                 params.score + LetterBag::getLetterPoints(forcedLetter),
+                params.factor
+            });
+        }
+    }
+}
+
+void Solver::followPlusRoot(SearchingParams &params, std::stack<SearchingParams> &stack) {
+    Node* linkChild = params.node->getChildByLetter(LINK_LETTER);
+    // et qu'il n'est pas nullptr
+    if(linkChild != Node::NO_NODE) {
+        // et que la position générée est valide, on l'ajoute
+        params.plusStatus = PlusStatus::IN_USE;
+        auto newPos = computeNextPos(params);
+
+        if(newPos.has_value()) {
+            stack.push({
+                linkChild,
+                *newPos,
+                params.startPos,
+                params.availableLetters,
+                string(params.word) += static_cast<char>(LINK_LETTER),
+                PlusStatus::USED,
+                params.direction,
+                params.score,
                 params.factor
             });
         }

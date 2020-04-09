@@ -4,10 +4,6 @@
 #include <string>
 #include "solver.hpp"
 
-
-
-
-
     class Utils {
 
         public:
@@ -18,7 +14,5 @@
             static bool validIndex(const char index);
             static bool validSpot(const SpotPos& spot);
     };
-
-
 
 #endif // UTILS_HPP
