@@ -11,15 +11,13 @@
 #include <utility>
 
 
-class Solver {
-    public:
 
+
+class Solver {
+    public :
         using StrokesSet = std::unordered_set<Stroke>;
         using NeighborsSet = std::unordered_set<SpotPos>;
-
-        Solver(Game& game);
-
-        const Board& solveNext();
+        struct SearchingParams;
 
     private:
 
@@ -29,23 +27,10 @@ class Solver {
             NOT_USED
         };
 
-        struct SearchingParams {
-            Node* node;
-            SpotPos position;
-            SpotPos startPos;
-            PlayerBag availableLetters;
-            std::string word;
-            PlusStatus plusStatus;
-            Direction direction;
-            unsigned int score;
-            unsigned int factor;
-
-//            void print() {
-//                std::cout << "value : " << node->getLetter() << std::endl;
-//                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
-//                std::cout << "Word : " << word << std::endl;
-//                availableLetters.print(); std::cout <<std::endl;
-//            }
+        enum class OtherWords {
+            NONE,
+            VALID,
+            NOT_VALID
         };
 
         Game& _game;
@@ -54,7 +39,8 @@ class Solver {
 
         std::unique_ptr<NeighborsSet> getNeighBors();
 
-        bool checkOtherWords(const SearchingParams& params,
+        std::optional<unsigned int> checkOtherWords(
+                             const SearchingParams& params,
                              const unsigned char candidate);
 
         std::optional<SpotPos> computeNextPos(const SearchingParams& params);
@@ -68,9 +54,35 @@ class Solver {
         void followPlayerBagRoots(SearchingParams& params,
                                   std::stack<SearchingParams>& stack,
                                   std::unique_ptr<StrokesSet>& result);
+
+    public:
+
+        struct SearchingParams {
+            Node* node;
+            SpotPos position;
+            SpotPos startPos;
+            PlayerBag availableLetters;
+            std::string word;
+            PlusStatus plusStatus;
+            Direction direction;
+            unsigned int mainScore;
+            unsigned int mainFactor;
+            unsigned int additionnalScore;
+
+//            void print() {
+//                std::cout << "value : " << node->getLetter() << std::endl;
+//                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
+//                std::cout << "Word : " << word << std::endl;
+//                availableLetters.print(); std::cout <<std::endl;
+//            }
+        };
+
+
+
+        Solver(Game& game);
+
+        const Board& solveNext();
   };
-
-
 
 #endif // SOLVER_HPP
 

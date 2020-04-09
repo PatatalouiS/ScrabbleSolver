@@ -38,3 +38,7 @@ void PlayerBag::print() const {
 PlayerBag::PlayerLetters& PlayerBag::data() {
     return playerLetters;
 }
+
+bool PlayerBag::empty() const {
+    return playerLetters.empty();
+}

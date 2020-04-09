@@ -26,6 +26,8 @@ class PlayerBag {
 
          const PlayerLetters& data() const;
 
+         bool empty() const;
+
          PlayerLetters& data();
 
          PlayerBag pop(const unsigned char letter) const;

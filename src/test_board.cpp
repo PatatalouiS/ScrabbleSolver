@@ -74,12 +74,12 @@ int main() {
     //cout; << tree.search("C") << endl
 
     std::stringstream ss ;
+    ss << ".LPHABETIQUE..." << std::endl ;
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
     ss << "..............." << std::endl ;
-    ss << "..............." << std::endl ;
-    ss << "..............." << std::endl ;
+    ss << ".ETISE........." << std::endl ;
     ss << "..............." << std::endl ;
     ss << "....PROJET....." << std::endl ;
     ss << ".......O......." << std::endl ;

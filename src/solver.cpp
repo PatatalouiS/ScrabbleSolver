@@ -22,11 +22,34 @@ namespace Functors {
     };
 }
 
+namespace {
+    static const unsigned int SCRABBLE_BONUS = 50;
+
+    static void addStroke(unique_ptr<Solver::StrokesSet>& result,
+                          const Solver::SearchingParams& params ) {
+        unsigned int totalScore = (params.mainScore * params.mainFactor)
+                + params.additionnalScore;
+
+        if(params.availableLetters.empty()) {
+            totalScore += SCRABBLE_BONUS;
+        }
+
+        string regular = Utils::toRegularWord(params.word);
+
+        result->insert({{
+            regular,
+            params.startPos,
+            params.direction,
+            totalScore
+        }});
+    }
+}
+
 const Board& Solver::solveNext() {
     auto availableStrokes = getAvailableStrokes();
 
     for(const auto& s : *availableStrokes) {
-        if(s.word == "ZEBRAT") {
+        if(s.word == "ABER") {
             stringstream o;
             o << s.pos;
             cout << "Word : " << s.word;
@@ -76,10 +99,13 @@ optional<SpotPos> Solver::computeNextPos(const SearchingParams& params) {
                    op(spotUsed.indexCol, colModifier));
 }
 
-bool Solver::checkOtherWords(const SearchingParams &params,
+optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
                              const unsigned char candidate) {
     SpotPos copy(params.position);
     Direction direction = params.direction;
+    unsigned int score = LetterBag::getLetterPoints(candidate)
+            * _game.board(params.position).bonus.letter_factor;
+    unsigned int factor = _game.board(params.position).bonus.word_factor;
 
     string orthogonalWord({ static_cast<char>(candidate) });
     bool stop = false;
@@ -96,6 +122,7 @@ bool Solver::checkOtherWords(const SearchingParams &params,
             nextLetter = _game.board(copy).letter;
             if(nextLetter != Spot::EMPTY_SPOT) {
                 orthogonalWord += static_cast<char>(nextLetter);
+                score += LetterBag::getLetterPoints(nextLetter);
                 criticalIndex--;
             }
             else {
@@ -123,6 +150,7 @@ bool Solver::checkOtherWords(const SearchingParams &params,
              nextLetter = _game.board(copy).letter;
              if(nextLetter != Spot::EMPTY_SPOT) {
                  orthogonalWord += static_cast<char>(nextLetter);
+                 score += LetterBag::getLetterPoints(nextLetter);
                  criticalIndex++;
              }
              else {
@@ -138,9 +166,20 @@ bool Solver::checkOtherWords(const SearchingParams &params,
 //        cout << " OTHER WORDS : " << "Pos : " << *params.position << " Word : " << orthogonalWord << " D : " << params.direction << endl;
 //    }
 
-    return orthogonalWord.size() > 2
-            ? _game.dico.searchPrivate(orthogonalWord)
-            : true;
+    if(orthogonalWord == "RELBBARCS+") {
+        cout << "coucou : " << score * factor << endl;
+    }
+
+
+    if(orthogonalWord.size() <= 2) {
+        return 0;
+    }
+
+    if(_game.dico.searchPrivate(orthogonalWord)) {
+        return score * factor;
+    }
+
+    return nullopt;
 }
 
 unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
@@ -164,7 +203,8 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
              PlusStatus::NOT_USED,
              Direction::HORIZONTAL,
              0,
-             1
+             1,
+             0
         });
 
         stack.push(startParams);
@@ -199,9 +239,7 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
                                   std::stack<SearchingParams> &stack,
                                   unique_ptr<StrokesSet>& result) {
     if(params.node->isFinal()) {
-        string regular = Utils::toRegularWord(params.word);
-        result->insert({{ regular, params.startPos, params.direction,
-                         params.score * params.factor }});
+        addStroke(result, params);
     }
 
     Spot& currentSpot = _game.board(params.position);
@@ -221,19 +259,21 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
             nextParams.node = child;
             nextParams.availableLetters = currentLetters.pop(letter);
             nextParams.word += static_cast<char>(letter);
-            nextParams.score += score;
-            nextParams.factor *= currentSpot.bonus.word_factor;
+            nextParams.mainScore += score;
+            nextParams.mainFactor *= currentSpot.bonus.word_factor;
 
-            if(nextParams.node->isFinal() && !newPos) {
-                string regular = Utils::toRegularWord(nextParams.word);
-                result->insert({{ regular, nextParams.startPos,
-                                  nextParams.direction,
-                                  nextParams.score * nextParams.factor
-                }});
-            }
-            else if(newPos && checkOtherWords(params, letter)) {
-                nextParams.position = *newPos;
-                stack.push(nextParams);
+            auto additionnalScore = checkOtherWords(params, letter);
+
+            if(additionnalScore.has_value()) {
+                nextParams.additionnalScore += *additionnalScore;
+
+                if(nextParams.node->isFinal() && !newPos) {
+                    addStroke(result, nextParams);
+                }
+                else if(newPos.has_value()) {
+                    nextParams.position = *newPos;
+                    stack.push(nextParams);
+                }
             }
         }
     }
@@ -269,7 +309,7 @@ void Solver::followForcedRoot(SearchingParams &params,
             params.node = forcedNode;
             params.position = *newPos;
             params.word += static_cast<char>(forcedLetter);
-            params.score += LetterBag::getLetterPoints(forcedLetter);
+            params.mainScore += LetterBag::getLetterPoints(forcedLetter);
             stack.push(params);
         }
     }
