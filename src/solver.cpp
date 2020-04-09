@@ -30,7 +30,8 @@ const Board& Solver::solveNext() {
             stringstream o;
             o << s.pos;
             cout << "Word : " << s.word;
-            cout << "| Pos : " << int(s.pos.indexLine)<< " , " << int(s.pos.indexCol);
+            cout << "| Pos : " << int(s.pos.indexLine)<< " , "
+                 << int(s.pos.indexCol);
             cout << "| Direction : " << s.direction;
             cout << "| Score : " << s.score << endl;
         }
@@ -75,7 +76,8 @@ optional<SpotPos> Solver::computeNextPos(const SearchingParams& params) {
                    op(spotUsed.indexCol, colModifier));
 }
 
-bool Solver::checkOtherWords(const SearchingParams &params, unsigned char candidate) {
+bool Solver::checkOtherWords(const SearchingParams &params,
+                             const unsigned char candidate) {
     SpotPos copy(params.position);
     Direction direction = params.direction;
 
@@ -151,7 +153,8 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
 
     for(const SpotPos& position : *startCellsArray) {
         SpotPos startPos(position.indexLine, position.indexCol);
-        //cout << "//////////////////////  CASE : " << int(position.indexLine) << " " << int(position.indexCol) << endl;
+        //cout << "//////////////////////  CASE : " << int(position.indexLine)
+        //<< " " << int(position.indexCol) << endl;
         SearchingParams startParams ({
              _game.dico.getHead(),
              startPos,
@@ -192,7 +195,8 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
     return array;
 }
 
-void Solver::followPlayerBagRoots(SearchingParams &params, std::stack<SearchingParams> &stack,
+void Solver::followPlayerBagRoots(SearchingParams &params,
+                                  std::stack<SearchingParams> &stack,
                                   unique_ptr<StrokesSet>& result) {
     if(params.node->isFinal()) {
         string regular = Utils::toRegularWord(params.word);
@@ -201,6 +205,8 @@ void Solver::followPlayerBagRoots(SearchingParams &params, std::stack<SearchingP
     }
 
     Spot& currentSpot = _game.board(params.position);
+    PlayerBag currentLetters = params.availableLetters;
+
     auto newPos = computeNextPos(params);
 
     // parcours du tableau de lettre possibles
@@ -211,78 +217,63 @@ void Solver::followPlayerBagRoots(SearchingParams &params, std::stack<SearchingP
             unsigned int score = LetterBag::getLetterPoints(letter)
                 * currentSpot.bonus.letter_factor;
 
-            if(child->isFinal() && !newPos) {
-                string regular = Utils::toRegularWord(params.word += static_cast<char>(letter));
-                result->insert({{ regular, params.startPos, params.direction,
-                                 (params.score + score) *
-                                 (params.factor * currentSpot.bonus.word_factor) }});
+            SearchingParams nextParams(params);
+            nextParams.node = child;
+            nextParams.availableLetters = currentLetters.pop(letter);
+            nextParams.word += static_cast<char>(letter);
+            nextParams.score += score;
+            nextParams.factor *= currentSpot.bonus.word_factor;
+
+            if(nextParams.node->isFinal() && !newPos) {
+                string regular = Utils::toRegularWord(nextParams.word);
+                result->insert({{ regular, nextParams.startPos,
+                                  nextParams.direction,
+                                  nextParams.score * nextParams.factor
+                }});
             }
             else if(newPos && checkOtherWords(params, letter)) {
-                stack.push({
-                    child,
-                    *newPos,
-                    params.startPos,
-                    params.availableLetters.pop(letter),
-                    string(params.word) += static_cast<char>(letter),
-                    params.plusStatus,
-                    params.direction,
-                    params.score + score,
-                    params.factor * currentSpot.bonus.word_factor
-                });
+                nextParams.position = *newPos;
+                stack.push(nextParams);
             }
         }
     }
 }
 
-
-void Solver::followForcedRoot(const SearchingParams &params, stack<SearchingParams>& stack) {
-    unsigned char forcedLetter = _game.board(params.position).letter;
-    Node* forcedNode = params.node->getChildByLetter(forcedLetter);
-
-    // lettre forcée compatible dans le Gaddagg
-    if(forcedNode != Node::NO_NODE) {
-        auto newPos = computeNextPos(params);
-
-        if(newPos.has_value()) {
-            stack.push({
-                forcedNode,
-                *newPos,
-                params.startPos,
-                params.availableLetters,
-                string(params.word) += static_cast<char>(forcedLetter),
-                params.plusStatus,
-                params.direction,
-                params.score + LetterBag::getLetterPoints(forcedLetter),
-                params.factor
-            });
-        }
-    }
-}
-
-void Solver::followPlusRoot(SearchingParams &params, std::stack<SearchingParams> &stack) {
+void Solver::followPlusRoot(SearchingParams &params,
+                            stack<SearchingParams> &stack) {
     Node* linkChild = params.node->getChildByLetter(LINK_LETTER);
-    // et qu'il n'est pas nullptr
+    // if PlusRoot exists
     if(linkChild != Node::NO_NODE) {
-        // et que la position générée est valide, on l'ajoute
         params.plusStatus = PlusStatus::IN_USE;
         auto newPos = computeNextPos(params);
 
         if(newPos.has_value()) {
-            stack.push({
-                linkChild,
-                *newPos,
-                params.startPos,
-                params.availableLetters,
-                string(params.word) += static_cast<char>(LINK_LETTER),
-                PlusStatus::USED,
-                params.direction,
-                params.score,
-                params.factor
-            });
+            params.node = linkChild;
+            params.position = *newPos;
+            params.word += static_cast<char>(LINK_LETTER);
+            params.plusStatus = PlusStatus::USED;
+            stack.push(params);
         }
     }
 }
 
+void Solver::followForcedRoot(SearchingParams &params,
+                              stack<SearchingParams>& stack) {
+    unsigned char forcedLetter = _game.board(params.position).letter;
+    Node* forcedNode = params.node->getChildByLetter(forcedLetter);
+    // if ForcedRoot exists
+    if(forcedNode != Node::NO_NODE) {
+        auto newPos = computeNextPos(params);
+
+        if(newPos.has_value()) {
+            params.node = forcedNode;
+            params.position = *newPos;
+            params.word += static_cast<char>(forcedLetter);
+            params.score += LetterBag::getLetterPoints(forcedLetter);
+            stack.push(params);
+        }
+    }
+}
 
 unique_ptr<Solver::NeighborsSet> Solver::getNeighBors() {
     unique_ptr set = make_unique<NeighborsSet>();

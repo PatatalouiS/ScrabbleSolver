@@ -55,11 +55,11 @@ class Solver {
         std::unique_ptr<NeighborsSet> getNeighBors();
 
         bool checkOtherWords(const SearchingParams& params,
-                             unsigned char candidate);
+                             const unsigned char candidate);
 
         std::optional<SpotPos> computeNextPos(const SearchingParams& params);
 
-        void followForcedRoot(const SearchingParams& params,
+        void followForcedRoot(SearchingParams& params,
                               std::stack<SearchingParams>& stack);
 
         void followPlusRoot(SearchingParams& params,
