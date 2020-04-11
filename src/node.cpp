@@ -39,3 +39,9 @@ void Node::setFinal(const bool final) {
 bool Node::isFinal() const {
     return final;
 }
+
+Node::~Node() {
+    for(Node* n : childs) {
+        delete n;
+    }
+}

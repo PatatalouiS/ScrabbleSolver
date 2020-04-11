@@ -34,7 +34,7 @@ class Solver {
                              const SearchingParams& params,
                              const unsigned char candidate);
 
-        std::optional<SpotPos> computeNextPos(const SearchingParams& params);
+        SpotPos computeNextPos(const SearchingParams& params);
 
         void followForcedRoot(SearchingParams& params,
                               std::stack<SearchingParams>& stack);

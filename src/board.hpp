@@ -4,8 +4,10 @@
 #include "gaddag.hpp"
 #include "letterbag.hpp"
 #include "playerbag.hpp"
+#include "stroke.hpp"
 
 #include <iostream>
+#include <string>
 
 /* Scrabble board */
 
@@ -18,6 +20,9 @@ struct Board {
   //i/o to files
   void save(std::ostream& out) ;
   void load(std::istream& in) ;
+
+  void putWord(const SpotPos& pos, const std::string& w, const Direction d);
+  void putStroke(const Stroke& stroke);
 
   //access to the spots by coordinates
   Spot operator()(unsigned char ql, unsigned char c) const ;

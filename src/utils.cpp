@@ -25,7 +25,6 @@ string Utils::toRegularWord(const string& str) {
     std::vector<char> previous;
     string out;
 
-
     unsigned int i = 0;
 
     for(i = 0; str[i] != '+'; ++i) {
@@ -47,6 +46,17 @@ bool Utils::validIndex(const char index) {
     return (index >= 0) && (index < static_cast<char>(Board::SIZE));
 }
 
-bool Utils::validSpot(const SpotPos &spot) {
+bool Utils::validPos(const SpotPos &spot) {
     return validIndex(spot.indexLine) && validIndex(spot.indexCol);
+}
+
+SpotPos Utils::startPosStroke(const Stroke& stroke) {
+    SpotPos start(stroke.pos);
+
+    char& movingIndex = stroke.direction == Direction::HORIZONTAL
+            ?  start.indexCol
+            :  start.indexLine;
+
+    movingIndex -= (stroke.word.find(LINK_LETTER) - 1);
+    return start;
 }

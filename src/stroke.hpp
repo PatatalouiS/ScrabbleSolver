@@ -24,7 +24,7 @@ inline std::ostream& operator<<(std::ostream& out, enum Direction d) {
 
 struct Stroke {
     std::string word = "";
-    SpotPos pos = SpotPos(0, 0);
+    SpotPos pos = SpotPos{0, 0};
     Direction direction = Direction::HORIZONTAL;
     unsigned int score = 0;
 

@@ -105,9 +105,13 @@ int main() {
 
     Solver solver(game);
 
-    solver.solveNext();
+    cout << game.board << endl ;
 
-    std::cout << game.board << std::endl ;
+    game.board.putWord({2, 2}, "CACA", Direction::HORIZONTAL);
+
+    cout << game.board << endl;
+
+    cout << solver.solveNext() << endl;
 
   return 0 ;
 }

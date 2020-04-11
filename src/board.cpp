@@ -1,6 +1,9 @@
 #include "board.hpp"
+#include "utils.hpp"
 
 #include <fstream>
+
+using namespace std;
 
 //default initialization
 Board::Board() {
@@ -89,7 +92,7 @@ void Board::save(std::ostream& out) {
 }
 
 void Board::load(std::istream& in) {
-  char c ;
+  unsigned char c ;
   //read a char for each spot
   for(unsigned char i = 0; i < 225; ++i) {
     in >> c ;
@@ -117,15 +120,35 @@ Spot& Board::operator()(unsigned char l, unsigned char c) {
 }
 
 Spot Board::operator() (const SpotPos& sp) const {
-    assert((sp.indexLine >= 0) && (sp.indexLine < SIZE));
-    assert((sp.indexCol >= 0) && (sp.indexCol < SIZE));
+    assert(Utils::validPos(sp));
     return spots[sp.indexLine*15 + sp.indexCol];
 }
 
 Spot& Board::operator() (const SpotPos& sp) {
-    assert((sp.indexLine >= 0) && (sp.indexLine < SIZE));
-    assert((sp.indexCol >= 0) && (sp.indexCol < SIZE));
+    assert(Utils::validPos(sp));
     return spots[sp.indexLine*15 + sp.indexCol];
+}
+
+void Board::putWord(const SpotPos &pos, const std::string &w, const Direction d) {
+    SpotPos copy(pos);
+    auto it = w.begin();
+
+    char& indexToMove = d == Direction::HORIZONTAL
+            ? copy.indexCol
+            : copy.indexLine;
+
+    do {
+        assert(Utils::validPos(copy));
+        (*this)(copy).letter = static_cast<unsigned char>(*it);
+        indexToMove++;
+        it++;
+    } while(it != w.end());
+}
+
+void Board::putStroke(const Stroke &stroke) {
+    string regularWord = Utils::toRegularWord(stroke.word);
+    SpotPos firstPos = Utils::startPosStroke(stroke);
+    putWord(firstPos, regularWord, stroke.direction);
 }
 
 //display on the console

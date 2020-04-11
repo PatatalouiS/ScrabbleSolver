@@ -2,17 +2,22 @@
 #define UTILS_HPP
 
 #include <string>
+#include <utility>
 #include "solver.hpp"
 
-    class Utils {
+namespace Utils {
 
-        public:
+    unsigned int charToIndex(const unsigned char letter);
 
-            static unsigned int charToIndex(const unsigned char letter);
-            static unsigned char indexTochar(const unsigned int index);
-            static std::string toRegularWord(const std::string& str);
-            static bool validIndex(const char index);
-            static bool validSpot(const SpotPos& spot);
-    };
+    unsigned char indexTochar(const unsigned int index);
+
+    std::string toRegularWord(const std::string& str);
+
+    bool validIndex(const char index);
+
+    bool validPos(const SpotPos& spot);
+
+    SpotPos startPosStroke(const Stroke& stroke);
+};
 
 #endif // UTILS_HPP

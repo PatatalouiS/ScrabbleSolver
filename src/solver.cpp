@@ -1,7 +1,6 @@
 ﻿
 #include <chrono>
 
-#include "solver.hpp"
 #include "utils.hpp"
 
 using namespace std;
@@ -31,7 +30,7 @@ namespace {
 
         string regular = Utils::toRegularWord(params.word);
 
-        Stroke toAdd({ regular,
+        Stroke toAdd({ params.word,
                         params.startPos,
                         params.direction,
                         totalScore });
@@ -53,24 +52,23 @@ Solver::Solver(Game& game) : _game(game) {
 }
 
 const Board& Solver::solveNext() { 
+    using namespace Utils;
+
     auto start = chrono::high_resolution_clock::now();
     auto availableStrokes = getAvailableStrokes();
+    Stroke bestStroke = availableStrokes.second;
     auto end = chrono::high_resolution_clock::now();
 
-    cout << "Exec Time : " <<  chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
-
-//    for(const auto& s : *availableStrokes) {
-//        if(s.score > best.score) {
-//            best = s;
-//        }
-//    }
+    cout << "Exec Time Solver : " <<
+        chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 
     cout << "The best stroke is : " << availableStrokes.second << endl;
 
+    _game.board.putStroke(bestStroke);
     return _game.board;
 }
 
-optional<SpotPos> Solver::computeNextPos(const SearchingParams& params) {
+SpotPos Solver::computeNextPos(const SearchingParams& params) {
     PlusStatus plusStatus = params.plusStatus;
 
     const SpotPos& spotUsed = plusStatus == PlusStatus::IN_USE
@@ -81,29 +79,20 @@ optional<SpotPos> Solver::computeNextPos(const SearchingParams& params) {
             ? Functors::minusFunc
             : Functors::plusFunc;
 
-    //char criticalIndex;
     char lineModifier;
     char colModifier;
 
     if(params.direction == Direction::HORIZONTAL) {
-        //criticalIndex = spotUsed.indexCol;
         lineModifier = 0;
         colModifier = 1;
     }
     else {
-        //criticalIndex = spotUsed.indexLine;
         lineModifier = 1;
         colModifier = 0;
     }
 
-    //char computedIndex = op(criticalIndex, 1);
-
-//    if(!Utils::validIndex(computedIndex)) {
-//        return nullopt;
-//    }
-
-    return SpotPos(op(spotUsed.indexLine, lineModifier),
-                   op(spotUsed.indexCol, colModifier));
+    return SpotPos{op(spotUsed.indexLine, lineModifier),
+                   op(spotUsed.indexCol, colModifier)};
 }
 
 optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
@@ -170,12 +159,13 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     }
 
 //    if(orthogonalWord.size() > 2 && params.position->indexLine == 13) {
-//        cout << " OTHER WORDS : " << "Pos : " << *params.position << " Word : " << orthogonalWord << " D : " << params.direction << endl;
+//        cout << " OTHER WORDS : " << "Pos : " << *params.position <<
+    //" Word : " << orthogonalWord << " D : " << params.direction << endl;
 //    }
 
-    if(orthogonalWord == "RELBBARCS+") {
-        cout << "coucou : " << score * factor << endl;
-    }
+//    if(orthogonalWord == "RELBBARCS+") {
+//        cout << "coucou : " << score * factor << endl;
+//    }
 
     if(orthogonalWord.size() <= 2) {
         return 0;
@@ -198,10 +188,10 @@ pair<unique_ptr<Solver::StrokesSet>, Stroke> Solver::getAvailableStrokes() {
     stack<SearchingParams> stack;
 
     for(const SpotPos& position : *startCellsArray) {
-        SpotPos startPos(position.indexLine, position.indexCol);
+        SpotPos startPos{position.indexLine, position.indexCol};
         //cout << "//////////////////////  CASE : " << int(position.indexLine)
         //<< " " << int(position.indexCol) << endl;
-        SearchingParams startParams ({
+        SearchingParams startParams {
              _game.dico.getHead(),
              startPos,
              startPos,
@@ -212,7 +202,7 @@ pair<unique_ptr<Solver::StrokesSet>, Stroke> Solver::getAvailableStrokes() {
              0,
              1,
              0
-        });
+        };
 
         // push horizontal reqsearch start params
         stack.push(startParams);
@@ -225,13 +215,14 @@ pair<unique_ptr<Solver::StrokesSet>, Stroke> Solver::getAvailableStrokes() {
             SearchingParams currentParams = stack.top();
             stack.pop();
 
-            if(Utils::validSpot(currentParams.position)) {
+            if(Utils::validPos(currentParams.position)) {
                 Spot currentSpot = _game.board(currentParams.position);
 
                 // there is no letter in the board at currentSpot
                 if(currentSpot.letter == Spot::EMPTY_SPOT) {
                     if(currentParams.node->isFinal()) {
-                        bestStroke = max(bestStroke, addStroke(array, currentParams));
+                        bestStroke = max(bestStroke,
+                                         addStroke(array, currentParams));
                     }
 
                     followPlayerBagRoots(currentParams, stack);
@@ -260,7 +251,6 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
                                   std::stack<SearchingParams> &stack) {
     Spot& currentSpot = _game.board(params.position);
     PlayerBag currentLetters = params.availableLetters;
-    auto newPos = computeNextPos(params);
 
     // parcours du tableau de lettre possibles
     for(unsigned char letter : params.availableLetters.data()) {
@@ -282,7 +272,7 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
             // if orthogonal word not exists or is valid
             if(additionnalScore.has_value()) {
                 nextParams.additionnalScore += *additionnalScore;
-                nextParams.position = *newPos;
+                nextParams.position = computeNextPos(params);
                 stack.push(nextParams);
             }
         }
@@ -295,15 +285,11 @@ void Solver::followPlusRoot(SearchingParams &params,
     // if PlusRoot exists
     if(linkChild != Node::NO_NODE) {
         params.plusStatus = PlusStatus::IN_USE;
-        auto newPos = computeNextPos(params);
-
-        //if(newPos.has_value()) {
-            params.node = linkChild;
-            params.position = *newPos;
-            params.word += static_cast<char>(LINK_LETTER);
-            params.plusStatus = PlusStatus::USED;
-            stack.push(params);
-        //}
+        params.node = linkChild;
+        params.position = computeNextPos(params);
+        params.word += static_cast<char>(LINK_LETTER);
+        params.plusStatus = PlusStatus::USED;
+        stack.push(params);
     }
 }
 
@@ -313,45 +299,37 @@ void Solver::followForcedRoot(SearchingParams &params,
     Node* forcedNode = params.node->getChildByLetter(forcedLetter);
     // if ForcedRoot exists
     if(forcedNode != Node::NO_NODE) {
-        auto newPos = computeNextPos(params);
-
-        //if(newPos.has_value()) {
-            params.node = forcedNode;
-            params.position = *newPos;
-            params.word += static_cast<char>(forcedLetter);
-            params.mainScore += LetterBag::getLetterPoints(forcedLetter);
-            stack.push(params);
-        //}
+        params.node = forcedNode;
+        params.position = computeNextPos(params);
+        params.word += static_cast<char>(forcedLetter);
+        params.mainScore += LetterBag::getLetterPoints(forcedLetter);
+        stack.push(params);
     }
 }
 
 unique_ptr<Solver::NeighborsSet> Solver::getNeighBors() {
     unique_ptr set = make_unique<NeighborsSet>();
 
-    for(unsigned char line = 0; line < Board::SIZE; line++) {
-        for(unsigned char col = 0; col < Board::SIZE; col++) {
-            const Spot current = _game.board(line, col);
+    for(char line = 0; line < char(Board::SIZE); line++) {
+        for(char col = 0; col < char(Board::SIZE); col++) {
+            Spot current = _game.board({ line, col });
             if(current.letter != 0) {
 
-                const std::array<SpotPos, 4> neighborsToTest ({
-                    SpotPos((line - 1) < 0 ? 0 : (line - 1), col),
-                    SpotPos((line + 1) >=15 ? 14 : (line + 1), col),
-                    SpotPos(line, (col + 1) >= 15 ? 14 : (col + 1)),
-                    SpotPos(line, (col - 1) < 0 ? 0 : (col -1))
-                });
+                array<SpotPos, 4> neighborsToTest{{
+                    { char(line - 1), col },
+                    { char(line + 1), col },
+                    { line, char(col + 1) },
+                    { line, char(col - 1) }
+                }};
 
                 for(const SpotPos& s : neighborsToTest) {
-                    const unsigned char indexLine = s.indexLine;
-                    const unsigned char indexCol = s.indexCol;
-
-                    if(_game.board(indexLine, indexCol).letter == Spot::EMPTY_SPOT) {
-                        set->insert({{ static_cast<char>(indexLine),
-                                       static_cast<char>(indexCol) }});
+                    if(Utils::validPos(s) &&
+                            _game.board(s).letter == Spot::EMPTY_SPOT) {
+                        set->insert(s);
                     }
                 }
             }
         }
     }
-
     return set;
 }

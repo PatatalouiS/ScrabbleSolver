@@ -6,6 +6,7 @@
 #include <thread>
 #include "prodcons.hpp"
 #include "utils.hpp"
+#include <chrono>
 
 using namespace std;
 
@@ -18,9 +19,8 @@ Gaddag::Gaddag() {
 }
 
 Gaddag::Gaddag(const string fileName) : Gaddag() {
+    auto start = chrono::high_resolution_clock::now();
     ifstream stream(fileName);
-//    ProdCons<string> prodCons(10);
-//    ProdCons<unique_ptr<WordsArray>> ptrTab(10);
 
     try {
         if(!stream.is_open()) {
@@ -39,6 +39,9 @@ Gaddag::Gaddag(const string fileName) : Gaddag() {
     }
 
     stream.close();
+    auto end = chrono::high_resolution_clock::now();
+
+    cout << "Exec Time Constructor : " <<  chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 }
 
 const Node* Gaddag::getHead() const {
@@ -248,22 +251,27 @@ void Gaddag::print() const {
 }
 
 Gaddag::~Gaddag() {
-    stack<Node*> stack({ head });
-    Node* current;
-    int nbDeleted = 0;
+    auto start = chrono::high_resolution_clock::now();
+//    stack<Node*> stack({ head });
+//    Node* current;
+//    int nbDeleted = 0;
 
-    while(!stack.empty()) {
-        current = stack.top();
-        stack.pop();
+//    while(!stack.empty()) {
+//        current = stack.top();
+//        stack.pop();
 
-        for(Node* node : current->getChilds()) {
-            if(node != Node::NO_NODE) {
-                stack.push(node);
-            }
-        }
+//        for(Node* node : current->getChilds()) {
+//            if(node != Node::NO_NODE) {
+//                stack.push(node);
+//            }
+//        }
 
-        delete current;
-        nbDeleted++;
-    }
-    cout << "nbDeleted : " << nbDeleted << endl;
+//        delete current;
+//        nbDeleted++;
+//    }
+    delete head;
+    auto end = chrono::high_resolution_clock::now();
+
+    cout << "Exec Time Destructor : " <<  chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
+    //cout << "nbDeleted : " << nbDeleted << endl;
 }

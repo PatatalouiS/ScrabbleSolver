@@ -10,16 +10,6 @@ struct SpotPos {
     char indexLine;
     char indexCol;
 
-    SpotPos(char l = 0, char c = 0) :
-        indexLine(l),
-        indexCol(c) {
-    }
-
-    friend std::ostream& operator<<(std::ostream& out, const SpotPos& sp){
-        return out << "( " << int(sp.indexLine)
-            << " , " << int(sp.indexCol) << " )";
-    }
-
     bool operator==(const SpotPos& other) const {
         return (indexLine == other.indexLine) &&
                (indexCol == other.indexCol);
@@ -66,3 +56,8 @@ struct Spot {
 
 //display of the spot contents
 std::ostream& operator<<(std::ostream& out, Spot s) ;
+
+inline std::ostream& operator<<(std::ostream& out, const SpotPos& sp){
+    return out << "( " << int(sp.indexLine)
+        << " , " << int(sp.indexCol) << " )";
+}

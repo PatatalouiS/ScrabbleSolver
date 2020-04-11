@@ -31,6 +31,8 @@ class Node {
 
         bool isFinal() const;
 
+        ~Node();
+
     private:
 
         unsigned char letter;
