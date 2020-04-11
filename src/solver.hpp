@@ -1,20 +1,17 @@
 #ifndef SOLVER_HPP
 #define SOLVER_HPP
 
-#include "board.hpp"
-#include "stroke.hpp"
-#include <vector>
-#include <set>
+#include <unordered_set>
 #include <stack>
 #include <optional>
-#include <iostream>
-#include <utility>
 
-
-
+#include "board.hpp"
+#include "stroke.hpp"
 
 class Solver {
+
     public :
+
         using StrokesSet = std::unordered_set<Stroke>;
         using NeighborsSet = std::unordered_set<SpotPos>;
         struct SearchingParams;
@@ -25,12 +22,6 @@ class Solver {
             USED,
             IN_USE,
             NOT_USED
-        };
-
-        enum class OtherWords {
-            NONE,
-            VALID,
-            NOT_VALID
         };
 
         Game& _game;
@@ -68,16 +59,7 @@ class Solver {
             unsigned int mainScore;
             unsigned int mainFactor;
             unsigned int additionnalScore;
-
-//            void print() {
-//                std::cout << "value : " << node->getLetter() << std::endl;
-//                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
-//                std::cout << "Word : " << word << std::endl;
-//                availableLetters.print(); std::cout <<std::endl;
-//            }
         };
-
-
 
         Solver(Game& game);
 
@@ -86,6 +68,12 @@ class Solver {
 
 #endif // SOLVER_HPP
 
+//            void print() {
+//                std::cout << "value : " << node->getLetter() << std::endl;
+//                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
+//                std::cout << "Word : " << word << std::endl;
+//                availableLetters.print(); std::cout <<std::endl;
+//            }
 
 
 

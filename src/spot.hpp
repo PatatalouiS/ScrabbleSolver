@@ -16,8 +16,8 @@ struct SpotPos {
     }
 
     friend std::ostream& operator<<(std::ostream& out, const SpotPos& sp){
-        out << "Line : " << int(sp.indexLine) << "  Col : " << int(sp.indexCol);
-        return out;
+        return out << "( " << int(sp.indexLine)
+            << " , " << int(sp.indexCol) << " )";
     }
 
     bool operator==(const SpotPos& other) const {

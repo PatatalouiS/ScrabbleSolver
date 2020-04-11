@@ -1,23 +1,31 @@
-﻿
-#include "solver.hpp"
+﻿#include "solver.hpp"
+#include <iostream>
 #include "utils.hpp"
+#include "letterbag.hpp"
+#include <array>
+#include <unordered_set>
+#include <sstream>
+#include <cassert>
 
 using namespace std;
 
+Solver::Solver(Game& game) : _game(game) {
+}
+
 namespace Functors {
-    auto plusFunc = [](const char a, const char b) -> char {
+    static auto plusFunc = [](char a, char b) -> char {
         return static_cast<char>(a + b);
     };
 
-    auto minusFunc = [](const char a, const char b) -> char {
+    static auto minusFunc = [](char a, char b) -> char {
         return static_cast<char>(a - b);
     };
 }
 
 namespace {
-    constexpr unsigned int SCRABBLE_BONUS = 50;
+    static const unsigned int SCRABBLE_BONUS = 50;
 
-    void addStroke(unique_ptr<Solver::StrokesSet>& result,
+    static void addStroke(unique_ptr<Solver::StrokesSet>& result,
                           const Solver::SearchingParams& params ) {
         unsigned int totalScore = (params.mainScore * params.mainFactor)
                 + params.additionnalScore;
@@ -37,24 +45,20 @@ namespace {
     }
 }
 
-Solver::Solver(Game& game) : _game(game) {
-}
-
 const Board& Solver::solveNext() {
     auto availableStrokes = getAvailableStrokes();
-    Stroke best;
 
     for(const auto& s : *availableStrokes) {
-        if(s.score > best.score) {
-            best = s;
-        }
-
-        if(s.word == "ZEBRAT") {
-            cout << s << endl;
+        if(s.word == "ABER") {
+            stringstream o;
+            o << s.pos;
+            cout << "Word : " << s.word;
+            cout << "| Pos : " << int(s.pos.indexLine)<< " , "
+                 << int(s.pos.indexCol);
+            cout << "| Direction : " << s.direction;
+            cout << "| Score : " << s.score << endl;
         }
     }
-
-    cout << "The best stroke is : " << best << endl;
 
     return _game.board;
 }
@@ -188,8 +192,8 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
 
     for(const SpotPos& position : *startCellsArray) {
         SpotPos startPos(position.indexLine, position.indexCol);
-        //cout << "//////////////////////  CASE : " << int(position.indexLine)
-        //<< " " << int(position.indexCol) << endl;
+        cout << "//////////////////////  CASE : " << int(position.indexLine)
+        << " " << int(position.indexCol) << endl;
         SearchingParams startParams ({
              _game.dico.getHead(),
              startPos,
@@ -203,10 +207,8 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
              0
         });
 
-        // push horizontal reqsearch start params
         stack.push(startParams);
         startParams.direction = Direction::VERTICAL;
-        // push vertical research start params
         stack.push(startParams);
 
         while(!stack.empty()) {
@@ -262,7 +264,6 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
 
             auto additionnalScore = checkOtherWords(params, letter);
 
-            // if orthogonal word not exists or is valid
             if(additionnalScore.has_value()) {
                 nextParams.additionnalScore += *additionnalScore;
 
