@@ -26,7 +26,7 @@ class Solver {
 
         Game& _game;
 
-        std::unique_ptr<StrokesSet> getAvailableStrokes();
+        std::pair<std::unique_ptr<StrokesSet>, Stroke> getAvailableStrokes();
 
         std::unique_ptr<NeighborsSet> getNeighBors();
 
@@ -43,8 +43,7 @@ class Solver {
                             std::stack<SearchingParams>& stack);
 
         void followPlayerBagRoots(SearchingParams& params,
-                                  std::stack<SearchingParams>& stack,
-                                  std::unique_ptr<StrokesSet>& result);
+                                  std::stack<SearchingParams>& stack);
 
     public:
 

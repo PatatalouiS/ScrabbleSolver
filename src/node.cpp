@@ -21,12 +21,6 @@ unsigned char Node::getLetter() const {
 }
 
 Node* Node::getChildByLetter(const unsigned char letter) const {
-//    for(Node* node : childs) {
-//        if((node != nullptr) && (node->getLetter() == letter)) {
-//            return node;
-//        }
-//    }
-//    return nullptr;
     return childs[Utils::charToIndex(letter)];
 }
 

@@ -1,4 +1,6 @@
 ﻿
+#include <chrono>
+
 #include "solver.hpp"
 #include "utils.hpp"
 
@@ -15,10 +17,11 @@ namespace Functors {
 }
 
 namespace {
+
     constexpr unsigned int SCRABBLE_BONUS = 50;
 
-    void addStroke(unique_ptr<Solver::StrokesSet>& result,
-                          const Solver::SearchingParams& params ) {
+    const Stroke& addStroke(unique_ptr<Solver::StrokesSet>& result,
+                          const Solver::SearchingParams& params) {
         unsigned int totalScore = (params.mainScore * params.mainFactor)
                 + params.additionnalScore;
 
@@ -28,33 +31,41 @@ namespace {
 
         string regular = Utils::toRegularWord(params.word);
 
-        result->insert({{
-            regular,
-            params.startPos,
-            params.direction,
-            totalScore
-        }});
+        Stroke toAdd({ regular,
+                        params.startPos,
+                        params.direction,
+                        totalScore });
+
+        return *(result->emplace(toAdd).first);
+    }
+}
+
+namespace std {
+    template<>
+    const Stroke& max(const Stroke& a, const Stroke& b) {
+        return b.score > a.score
+                ? b
+                : a;
     }
 }
 
 Solver::Solver(Game& game) : _game(game) {
 }
 
-const Board& Solver::solveNext() {
+const Board& Solver::solveNext() { 
+    auto start = chrono::high_resolution_clock::now();
     auto availableStrokes = getAvailableStrokes();
-    Stroke best;
+    auto end = chrono::high_resolution_clock::now();
 
-    for(const auto& s : *availableStrokes) {
-        if(s.score > best.score) {
-            best = s;
-        }
+    cout << "Exec Time : " <<  chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 
-        if(s.word == "ZEBRAT") {
-            cout << s << endl;
-        }
-    }
+//    for(const auto& s : *availableStrokes) {
+//        if(s.score > best.score) {
+//            best = s;
+//        }
+//    }
 
-    cout << "The best stroke is : " << best << endl;
+    cout << "The best stroke is : " << availableStrokes.second << endl;
 
     return _game.board;
 }
@@ -70,26 +81,26 @@ optional<SpotPos> Solver::computeNextPos(const SearchingParams& params) {
             ? Functors::minusFunc
             : Functors::plusFunc;
 
-    char criticalIndex;
+    //char criticalIndex;
     char lineModifier;
     char colModifier;
 
     if(params.direction == Direction::HORIZONTAL) {
-        criticalIndex = spotUsed.indexCol;
+        //criticalIndex = spotUsed.indexCol;
         lineModifier = 0;
         colModifier = 1;
     }
     else {
-        criticalIndex = spotUsed.indexLine;
+        //criticalIndex = spotUsed.indexLine;
         lineModifier = 1;
         colModifier = 0;
     }
 
-    char computedIndex = op(criticalIndex, 1);
+    //char computedIndex = op(criticalIndex, 1);
 
-    if(!Utils::validIndex(computedIndex)) {
-        return nullopt;
-    }
+//    if(!Utils::validIndex(computedIndex)) {
+//        return nullopt;
+//    }
 
     return SpotPos(op(spotUsed.indexLine, lineModifier),
                    op(spotUsed.indexCol, colModifier));
@@ -166,7 +177,6 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
         cout << "coucou : " << score * factor << endl;
     }
 
-
     if(orthogonalWord.size() <= 2) {
         return 0;
     }
@@ -178,7 +188,8 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     return nullopt;
 }
 
-unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
+pair<unique_ptr<Solver::StrokesSet>, Stroke> Solver::getAvailableStrokes() {
+    Stroke bestStroke;
     // vector for pushing valid stokes
     unique_ptr<StrokesSet> array = make_unique<StrokesSet>();
     // array of start cells, to begin serach
@@ -213,36 +224,42 @@ unique_ptr<Solver::StrokesSet> Solver::getAvailableStrokes() {
             // read top of the stack
             SearchingParams currentParams = stack.top();
             stack.pop();
-            Spot currentSpot = _game.board(currentParams.position);
 
-            // there is no letter in the board at currentSpot
-            if(currentSpot.letter == Spot::EMPTY_SPOT) {
-                followPlayerBagRoots(currentParams, stack, array);
-                // Use the Plus root if it's not already used
-                if(currentParams.plusStatus == PlusStatus::NOT_USED) {
-                    followPlusRoot(currentParams, stack);
+            if(Utils::validSpot(currentParams.position)) {
+                Spot currentSpot = _game.board(currentParams.position);
+
+                // there is no letter in the board at currentSpot
+                if(currentSpot.letter == Spot::EMPTY_SPOT) {
+                    if(currentParams.node->isFinal()) {
+                        bestStroke = max(bestStroke, addStroke(array, currentParams));
+                    }
+
+                    followPlayerBagRoots(currentParams, stack);
+                    // Use the Plus root if it's not already used
+                    if(currentParams.plusStatus == PlusStatus::NOT_USED) {
+                        followPlusRoot(currentParams, stack);
+                    }
+                }
+                // There is a letter in the the board at currentSpot
+                else {
+                    followForcedRoot(currentParams, stack);
                 }
             }
-            // There is a letter in the the board at currentSpot
-            else {
-                followForcedRoot(currentParams, stack);
+            else if(currentParams.plusStatus == PlusStatus::NOT_USED) {
+                followPlusRoot(currentParams, stack);
+            }
+            else if(currentParams.node->isFinal()){
+                bestStroke = max(bestStroke, addStroke(array, currentParams));
             }
         }
     }
-
-    return array;
+    return { move(array), bestStroke };
 }
 
 void Solver::followPlayerBagRoots(SearchingParams &params,
-                                  std::stack<SearchingParams> &stack,
-                                  unique_ptr<StrokesSet>& result) {
-    if(params.node->isFinal()) {
-        addStroke(result, params);
-    }
-
+                                  std::stack<SearchingParams> &stack) {
     Spot& currentSpot = _game.board(params.position);
     PlayerBag currentLetters = params.availableLetters;
-
     auto newPos = computeNextPos(params);
 
     // parcours du tableau de lettre possibles
@@ -265,14 +282,8 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
             // if orthogonal word not exists or is valid
             if(additionnalScore.has_value()) {
                 nextParams.additionnalScore += *additionnalScore;
-
-                if(nextParams.node->isFinal() && !newPos) {
-                    addStroke(result, nextParams);
-                }
-                else if(newPos.has_value()) {
-                    nextParams.position = *newPos;
-                    stack.push(nextParams);
-                }
+                nextParams.position = *newPos;
+                stack.push(nextParams);
             }
         }
     }
@@ -286,13 +297,13 @@ void Solver::followPlusRoot(SearchingParams &params,
         params.plusStatus = PlusStatus::IN_USE;
         auto newPos = computeNextPos(params);
 
-        if(newPos.has_value()) {
+        //if(newPos.has_value()) {
             params.node = linkChild;
             params.position = *newPos;
             params.word += static_cast<char>(LINK_LETTER);
             params.plusStatus = PlusStatus::USED;
             stack.push(params);
-        }
+        //}
     }
 }
 
@@ -304,13 +315,13 @@ void Solver::followForcedRoot(SearchingParams &params,
     if(forcedNode != Node::NO_NODE) {
         auto newPos = computeNextPos(params);
 
-        if(newPos.has_value()) {
+        //if(newPos.has_value()) {
             params.node = forcedNode;
             params.position = *newPos;
             params.word += static_cast<char>(forcedLetter);
             params.mainScore += LetterBag::getLetterPoints(forcedLetter);
             stack.push(params);
-        }
+        //}
     }
 }
 
