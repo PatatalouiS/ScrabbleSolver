@@ -52,8 +52,6 @@ Solver::Solver(Game& game) : _game(game) {
 }
 
 const Board& Solver::solveNext() { 
-    using namespace Utils;
-
     auto start = chrono::high_resolution_clock::now();
     auto availableStrokes = getAvailableStrokes();
     Stroke bestStroke = availableStrokes.second;
@@ -96,67 +94,94 @@ SpotPos Solver::computeNextPos(const SearchingParams& params) {
 }
 
 optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
-                             const unsigned char candidate) {
-    SpotPos copy(params.position);
+                                               const unsigned char candidate) {
+    SpotPos copy = params.position;
     Direction direction = params.direction;
+
     unsigned int score = LetterBag::getLetterPoints(candidate)
             * _game.board(params.position).bonus.letter_factor;
+
     unsigned int factor = _game.board(params.position).bonus.word_factor;
 
     string orthogonalWord({ static_cast<char>(candidate) });
-    bool stop = false;
+    //bool stop = false;
 
-    char& criticalIndex = direction == Direction::HORIZONTAL
+    char& movingIndex = direction == Direction::HORIZONTAL
             ? copy.indexLine
             : copy.indexCol;
 
-    criticalIndex --;
+     //criticalIndex--
 
-    while(!stop) {
-       unsigned char nextLetter;
-       if(Utils::validIndex(criticalIndex)) {
-            nextLetter = _game.board(copy).letter;
-            if(nextLetter != Spot::EMPTY_SPOT) {
-                orthogonalWord += static_cast<char>(nextLetter);
-                score += LetterBag::getLetterPoints(nextLetter);
-                criticalIndex--;
-            }
-            else {
-                stop = true;
-            }
-       }
-       else {
-           stop = true;
-       }
-    }
+    while(Utils::validIndex(movingIndex)) {
+        unsigned char nextLetter = _game.board(copy).letter;
 
-    orthogonalWord += (static_cast<char>(LINK_LETTER));
-    stop = false;
-
-    if(direction == Direction::HORIZONTAL) {
-       criticalIndex = params.position.indexLine + 1;
-    }
-    else {
-        criticalIndex = params.position.indexCol + 1;
-    }
-
-    while(!stop) {
-        unsigned char nextLetter;
-        if(Utils::validIndex(criticalIndex)) {
-             nextLetter = _game.board(copy).letter;
-             if(nextLetter != Spot::EMPTY_SPOT) {
-                 orthogonalWord += static_cast<char>(nextLetter);
-                 score += LetterBag::getLetterPoints(nextLetter);
-                 criticalIndex++;
-             }
-             else {
-                 stop = true;
-             }
+        if(nextLetter != Spot::EMPTY_SPOT) {
+            orthogonalWord += static_cast<char>(nextLetter);
+            score += LetterBag::getLetterPoints(nextLetter);
         }
-        else {
-            stop = true;
-        }
+        movingIndex--;
     }
+
+    orthogonalWord += static_cast<char>(LINK_LETTER);
+    movingIndex = direction == Direction::HORIZONTAL
+            ? params.position.indexLine + 1
+            : params.position.indexCol + 1;
+
+    while(Utils::validIndex(movingIndex)) {
+        unsigned char nextLetter = _game.board(copy).letter;
+
+        if(nextLetter != Spot::EMPTY_SPOT) {
+            orthogonalWord += static_cast<char>(nextLetter);
+            score += LetterBag::getLetterPoints(nextLetter);
+        }
+        movingIndex++;
+    }
+
+//    while(!stop) {
+//       unsigned char nextLetter;
+//       if(Utils::validIndex(criticalIndex)) {
+//            nextLetter = _game.board(copy).letter;
+//            if(nextLetter != Spot::EMPTY_SPOT) {
+//                orthogonalWord += static_cast<char>(nextLetter);
+//                score += LetterBag::getLetterPoints(nextLetter);
+//                criticalIndex--;
+//            }
+//            else {
+//                stop = true;
+//            }
+//       }
+//       else {
+//           stop = true;
+//       }
+//    }
+
+//    orthogonalWord += (static_cast<char>(LINK_LETTER));
+//    stop = false;
+
+//    if(direction == Direction::HORIZONTAL) {
+//       criticalIndex = params.position.indexLine + 1;
+//    }
+//    else {
+//        criticalIndex = params.position.indexCol + 1;
+//    }
+
+//    while(!stop) {
+//        unsigned char nextLetter;
+//        if(Utils::validIndex(criticalIndex)) {
+//             nextLetter = _game.board(copy).letter;
+//             if(nextLetter != Spot::EMPTY_SPOT) {
+//                 orthogonalWord += static_cast<char>(nextLetter);
+//                 score += LetterBag::getLetterPoints(nextLetter);
+//                 criticalIndex++;
+//             }
+//             else {
+//                 stop = true;
+//             }
+//        }
+//        else {
+//            stop = true;
+//        }
+//    }
 
 //    if(orthogonalWord.size() > 2 && params.position->indexLine == 13) {
 //        cout << " OTHER WORDS : " << "Pos : " << *params.position <<

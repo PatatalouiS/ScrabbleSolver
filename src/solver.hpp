@@ -5,11 +5,11 @@
 #include <stack>
 #include <optional>
 
+#include "game.hpp"
 #include "board.hpp"
 #include "stroke.hpp"
 
 class Solver {
-
     public :
 
         using StrokesSet = std::unordered_set<Stroke>;
@@ -66,13 +66,3 @@ class Solver {
   };
 
 #endif // SOLVER_HPP
-
-//            void print() {
-//                std::cout << "value : " << node->getLetter() << std::endl;
-//                std::cout << "PosL : " << int(position.indexLine) << " PosC : " << int(position.indexCol) << std::endl;
-//                std::cout << "Word : " << word << std::endl;
-//                availableLetters.print(); std::cout <<std::endl;
-//            }
-
-
-

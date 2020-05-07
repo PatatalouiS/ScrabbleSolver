@@ -18,19 +18,25 @@ OBJECTS_DIR= obj/
 
 # Input
 HEADERS += src/board.hpp src/bonus.hpp src/spot.hpp \
+    src/direction.hpp \
     src/gaddag.hpp \
+    src/game.hpp \
     src/letterbag.hpp \
     src/node.hpp \
     src/playerbag.hpp \
     src/prodcons.hpp \
     src/solver.hpp \
+    src/spotpos.hpp \
     src/stroke.hpp \
     src/utils.hpp
 SOURCES += src/board.cpp src/bonus.cpp src/spot.cpp src/test_board.cpp \
+    src/direction.cpp \
     src/gaddag.cpp \
+    src/game.cpp \
     src/letterbag.cpp \
     src/node.cpp \
     src/playerbag.cpp \
     src/solver.cpp \
+    src/spotpos.cpp \
     src/stroke.cpp \
     src/utils.cpp

@@ -4,34 +4,11 @@
 #include <iostream>
 #include "unordered_set"
 
-
-struct SpotPos {
-
-    char indexLine;
-    char indexCol;
-
-    bool operator==(const SpotPos& other) const {
-        return (indexLine == other.indexLine) &&
-               (indexCol == other.indexCol);
-    }
-};
-
-
-namespace std {
-    template<>
-    struct hash<SpotPos> {
-        size_t operator()(const SpotPos& pos) const {
-            auto hash = std::hash<char>();
-            return hash(pos.indexLine) ^ (hash(pos.indexCol) << 1);
-        }
-    };
-}
-
 /* A spot on the board to place a letter */
 
 struct Spot {
 
-    static constexpr unsigned char EMPTY_SPOT = 0;
+  static constexpr unsigned char EMPTY_SPOT = 0;
 
   //default initialization, no letter, no bonus
   Spot() :
@@ -55,9 +32,4 @@ struct Spot {
 } ;
 
 //display of the spot contents
-std::ostream& operator<<(std::ostream& out, Spot s) ;
-
-inline std::ostream& operator<<(std::ostream& out, const SpotPos& sp){
-    return out << "( " << int(sp.indexLine)
-        << " , " << int(sp.indexCol) << " )";
-}
+std::ostream& operator<<(std::ostream& out, Spot s);

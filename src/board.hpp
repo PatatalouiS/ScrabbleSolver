@@ -37,19 +37,3 @@ struct Board {
 
 //board display on the console
 std::ostream& operator<<(std::ostream& out, const Board& b) ;
-
-struct Game {
-    Board board;
-    Gaddag dico;
-    LetterBag letterBag;
-
-    PlayerBag playerBag;
-
-    Game(const std::string& path, std::istream& txt, PlayerBag p) :
-        dico(path),
-        playerBag(p) {
-        board.load(txt);
-    }
-
-    ~Game() {}
-};

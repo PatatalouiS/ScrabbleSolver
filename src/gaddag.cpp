@@ -1,18 +1,14 @@
-#include "gaddag.hpp"
 #include <stack>
 #include <iostream>
 #include <fstream>
-#include <algorithm>
-#include <thread>
-#include "prodcons.hpp"
-#include "utils.hpp"
 #include <chrono>
+
+#include "gaddag.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
 using WordsArray = std::vector<std::string>;
-
-
 
 Gaddag::Gaddag() {
     head = new Node(HEAD_LETTER);
@@ -41,7 +37,8 @@ Gaddag::Gaddag(const string fileName) : Gaddag() {
     stream.close();
     auto end = chrono::high_resolution_clock::now();
 
-    cout << "Exec Time Constructor : " <<  chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
+    cout << "Exec Time Constructor : " <<
+        chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 }
 
 const Node* Gaddag::getHead() const {
@@ -174,7 +171,8 @@ unique_ptr<vector<string>> Gaddag::containsArray(const unsigned char c) const {
     Node* current = head->getChildByLetter(c);
     if(current == Node::NO_NODE) return tab;
 
-    stack<WordPair> stack({ make_pair(current, string().append(1, c)) });
+    stack<WordPair> stack({{ current,
+                             string().append(1, static_cast<char>(c)) }});
     WordPair strPair;
     string currentWord;
     Node* currentNode;
@@ -252,26 +250,9 @@ void Gaddag::print() const {
 
 Gaddag::~Gaddag() {
     auto start = chrono::high_resolution_clock::now();
-//    stack<Node*> stack({ head });
-//    Node* current;
-//    int nbDeleted = 0;
-
-//    while(!stack.empty()) {
-//        current = stack.top();
-//        stack.pop();
-
-//        for(Node* node : current->getChilds()) {
-//            if(node != Node::NO_NODE) {
-//                stack.push(node);
-//            }
-//        }
-
-//        delete current;
-//        nbDeleted++;
-//    }
     delete head;
     auto end = chrono::high_resolution_clock::now();
 
-    cout << "Exec Time Destructor : " <<  chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
-    //cout << "nbDeleted : " << nbDeleted << endl;
+    cout << "Exec Time Destructor : " <<
+        chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 }

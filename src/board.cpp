@@ -139,7 +139,7 @@ void Board::putWord(const SpotPos &pos, const std::string &w, const Direction d)
 
     do {
         assert(Utils::validPos(copy));
-        (*this)(copy).letter = static_cast<unsigned char>(*it);
+        operator()(copy).letter = static_cast<unsigned char>(*it);
         indexToMove++;
         it++;
     } while(it != w.end());

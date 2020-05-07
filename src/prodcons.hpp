@@ -1,8 +1,6 @@
 #ifndef PRODCONS_HPP
 #define PRODCONS_HPP
 
-//std::numeric_limits<unsigned int>::max()
-
 #include <mutex>
 #include <queue>
 #include <limits>

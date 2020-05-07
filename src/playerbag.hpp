@@ -4,8 +4,6 @@
 #include <array>
 #include "letterbag.hpp"
 
-
-
 class PlayerBag {
 
     private :

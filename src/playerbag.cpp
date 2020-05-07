@@ -3,7 +3,7 @@
 
 using namespace std;
 
-PlayerBag::PlayerBag(LetterBag& mainLetterBag)  /*letterBag(mainLetterBag)*/ {
+PlayerBag::PlayerBag(LetterBag& mainLetterBag) {
     for(unsigned char letterOfPlayer : playerLetters) {
         letterOfPlayer = mainLetterBag.pickRandomLetter();
     }
