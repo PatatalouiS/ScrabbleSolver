@@ -2,6 +2,7 @@
 #include "utils.hpp"
 
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -74,8 +75,18 @@ Board::Board() {
   }
 }
 
+Board::Board(const Board& b) : Board() {
+    stringstream stream;
+    b.save(stream);
+    load(stream);
+}
+
+Board::Board(istream& stream) : Board() {
+    load(stream);
+}
+
 //i/o to files
-void Board::save(std::ostream& out) {
+void Board::save(std::ostream& out) const {
   //write the grid of chars
   for(unsigned char i = 0; i < 225; ++i) {
     if( i%15 == 0) {
@@ -129,7 +140,18 @@ Spot& Board::operator() (const SpotPos& sp) {
     return spots[sp.indexLine*15 + sp.indexCol];
 }
 
-void Board::putWord(const SpotPos &pos, const std::string &w, const Direction d) {
+bool Board::isEmpty() const {
+    for(unsigned char i = 0; i < SIZE; ++i) {
+        for(unsigned char j = 0; j < SIZE; ++j) {
+            if(!(*this)(i, j).isEmpty()) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+Board& Board::putWord(const SpotPos &pos, const std::string &w, const Direction d) {
     SpotPos copy(pos);
     auto it = w.begin();
 
@@ -143,12 +165,15 @@ void Board::putWord(const SpotPos &pos, const std::string &w, const Direction d)
         indexToMove++;
         it++;
     } while(it != w.end());
+
+    return *this;
 }
 
-void Board::putStroke(const Stroke &stroke) {
+Board& Board::putStroke(const Stroke &stroke) {
     string regularWord = Utils::toRegularWord(stroke.word);
     SpotPos firstPos = Utils::startPosStroke(stroke);
     putWord(firstPos, regularWord, stroke.direction);
+    return *this;
 }
 
 //display on the console

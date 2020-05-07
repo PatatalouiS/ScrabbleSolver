@@ -4,11 +4,13 @@
 #include <string>
 #include "spotpos.hpp"
 #include "direction.hpp"
+#include "playerbag.hpp"
 
 struct Stroke {
     std::string word = "";
     SpotPos pos = SpotPos{0, 0};
     Direction direction = Direction::HORIZONTAL;
+    PlayerBag playerBag = PlayerBag();
     unsigned int score = 0;
 
     bool operator==(const Stroke& other) const;

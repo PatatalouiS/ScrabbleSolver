@@ -12,25 +12,31 @@ class PlayerBag {
 
         using PlayerLetters = std::vector<unsigned char>;
 
-        //LetterBag& letterBag;
-
         PlayerLetters playerLetters;
 
     public:
 
+         PlayerBag();
+
          PlayerBag(LetterBag& mainLetterBag);
+
+         PlayerBag(const PlayerBag& bag);
 
          PlayerBag(const PlayerLetters& letters);
 
          const PlayerLetters& data() const;
 
-         bool empty() const;
+         bool isEmpty() const;
 
          PlayerLetters& data();
+
+         PlayerBag& fillWith(LetterBag& mainLetterBag);
 
          PlayerBag pop(const unsigned char letter) const;
 
          void print() const;
 };
+
+std::ostream& operator << (std::ostream& stream, const PlayerBag& pb);
 
 #endif // PLAYERBAG_HPP

@@ -7,9 +7,6 @@
 /* A spot on the board to place a letter */
 
 struct Spot {
-
-  static constexpr unsigned char EMPTY_SPOT = 0;
-
   //default initialization, no letter, no bonus
   Spot() :
     letter(0)
@@ -28,7 +25,7 @@ struct Spot {
   //the bonus present on the spot
   Bonus bonus ;
 
-
+  bool isEmpty() const;
 } ;
 
 //display of the spot contents

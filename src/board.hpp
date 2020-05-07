@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 
 /* Scrabble board */
 
@@ -15,14 +16,20 @@ struct Board {
   //default initialization of a scrabble board
   Board() ;
 
+  //construct with another stringstream
+  Board(std::istream& ss);
+
+  //copy constructor;
+  Board(const Board& b);
+
   static constexpr unsigned int SIZE = 15;
 
   //i/o to files
-  void save(std::ostream& out) ;
+  void save(std::ostream& out) const;
   void load(std::istream& in) ;
 
-  void putWord(const SpotPos& pos, const std::string& w, const Direction d);
-  void putStroke(const Stroke& stroke);
+  Board& putWord(const SpotPos& pos, const std::string& w, const Direction d);
+  Board& putStroke(const Stroke& stroke);
 
   //access to the spots by coordinates
   Spot operator()(unsigned char ql, unsigned char c) const ;
@@ -30,6 +37,8 @@ struct Board {
 
   Spot operator() (const SpotPos& sp) const;
   Spot& operator() (const SpotPos& sp) ;
+
+  bool isEmpty() const;
 
   //spots are public, and can therefore also be accessed b index
   Spot spots[225] ;

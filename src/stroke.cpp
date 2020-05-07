@@ -1,10 +1,12 @@
 
 #include "stroke.hpp"
+#include "utils.hpp"
 
 using namespace std;
 
 bool Stroke::operator==(const Stroke &other) const {
-    return (word == other.word) && (pos == other.pos);
+    return (Utils::toRegularWord(word) == Utils::toRegularWord(other.word)) &&
+           (pos == other.pos);
 }
 
 std::ostream& operator <<(std::ostream& out, const Stroke& stroke) {
@@ -16,6 +18,6 @@ std::ostream& operator <<(std::ostream& out, const Stroke& stroke) {
 }
 
 size_t std::hash<Stroke>::operator()(const Stroke& s) const {
-    return (std::hash<std::string>()(s.word)
+    return (std::hash<std::string>()(Utils::toRegularWord(s.word))
             ^ (std::hash<SpotPos>()(s.pos) << 1));
 }

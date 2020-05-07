@@ -1,5 +1,9 @@
 #include "spot.hpp"
 
+bool Spot::isEmpty() const {
+    return letter == 0;
+}
+
 //display of the spot contents
 std::ostream& operator<<(std::ostream& out, Spot s) {
 

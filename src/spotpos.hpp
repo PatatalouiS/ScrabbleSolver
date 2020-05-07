@@ -11,6 +11,8 @@ struct SpotPos {
     bool operator==(const SpotPos& other) const;
 };
 
+const SpotPos CENTER_OF_BOARD = SpotPos{ 7, 7 };
+
 std::ostream& operator<<(std::ostream& out, const SpotPos& sp);
 
 namespace std {

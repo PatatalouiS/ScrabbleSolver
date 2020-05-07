@@ -5,9 +5,13 @@
 #include <stack>
 #include <optional>
 
-#include "game.hpp"
 #include "board.hpp"
 #include "stroke.hpp"
+
+struct Config {
+    PlayerBag playerBag;
+    Board board;
+};
 
 class Solver {
     public :
@@ -18,37 +22,40 @@ class Solver {
 
     private:
 
+        static const Gaddag dico;
+
         enum class PlusStatus {
             USED,
             IN_USE,
             NOT_USED
         };
 
-        Game& _game;
+        static std::pair<std::unique_ptr<StrokesSet>, Stroke> getAvailableStrokes(const Config& conf);
 
-        std::pair<std::unique_ptr<StrokesSet>, Stroke> getAvailableStrokes();
+        static std::unique_ptr<NeighborsSet> getNeighBors(const Board& b);
 
-        std::unique_ptr<NeighborsSet> getNeighBors();
-
-        std::optional<unsigned int> checkOtherWords(
+        static std::optional<unsigned int> checkOtherWords(
                              const SearchingParams& params,
-                             const unsigned char candidate);
+                             const unsigned char candidate,
+                             const Board& board);
 
-        SpotPos computeNextPos(const SearchingParams& params);
+        static SpotPos computeNextPos(const SearchingParams& params);
 
-        void followForcedRoot(SearchingParams& params,
-                              std::stack<SearchingParams>& stack);
+        static void followForcedRoot(SearchingParams& params,
+                              std::stack<SearchingParams>& stack,
+                              const Config& config);
 
-        void followPlusRoot(SearchingParams& params,
+        static void followPlusRoot(SearchingParams& params,
                             std::stack<SearchingParams>& stack);
 
-        void followPlayerBagRoots(SearchingParams& params,
-                                  std::stack<SearchingParams>& stack);
+        static void followPlayerBagRoots(SearchingParams& params,
+                                  std::stack<SearchingParams>& stack,
+                                  const Config& config );
 
     public:
 
         struct SearchingParams {
-            Node* node;
+            const Node* node;
             SpotPos position;
             SpotPos startPos;
             PlayerBag availableLetters;
@@ -58,11 +65,14 @@ class Solver {
             unsigned int mainScore;
             unsigned int mainFactor;
             unsigned int additionnalScore;
+            unsigned int nbUsedLetters;
         };
 
-        Solver(Game& game);
+        Solver();
 
-        const Board& solveNext();
+        static Board solveConfig(const Config& config);
+
+        void solveFromScratch();
   };
 
 #endif // SOLVER_HPP

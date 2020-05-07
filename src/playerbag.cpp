@@ -3,14 +3,19 @@
 
 using namespace std;
 
+PlayerBag::PlayerBag() : playerLetters() {
+}
+
 PlayerBag::PlayerBag(LetterBag& mainLetterBag) {
-    for(unsigned char letterOfPlayer : playerLetters) {
-        letterOfPlayer = mainLetterBag.pickRandomLetter();
+    for(unsigned int i = 0; i < 7; ++i ) {
+        playerLetters.push_back(mainLetterBag.pickRandomLetter());
     }
 }
 
 PlayerBag::PlayerBag(const PlayerLetters& letters) : playerLetters(letters) {
 }
+
+PlayerBag::PlayerBag(const PlayerBag& bag) : playerLetters(bag.data()) {}
 
 PlayerBag PlayerBag::pop(const unsigned char letter) const {
     PlayerLetters copy(playerLetters);
@@ -39,6 +44,18 @@ PlayerBag::PlayerLetters& PlayerBag::data() {
     return playerLetters;
 }
 
-bool PlayerBag::empty() const {
+bool PlayerBag::isEmpty() const {
     return playerLetters.empty();
+}
+
+PlayerBag& PlayerBag::fillWith(LetterBag& mainLetterBag) {
+    while(!mainLetterBag.isEmpty() && playerLetters.size() < 7) {
+        playerLetters.push_back(mainLetterBag.pickRandomLetter());
+    }
+    return *this;
+}
+
+std::ostream& operator << (std::ostream& stream, const PlayerBag& pb) {
+    string letters(pb.data().begin(), pb.data().end());
+    return stream << letters;
 }

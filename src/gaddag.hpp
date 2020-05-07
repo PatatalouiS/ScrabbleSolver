@@ -27,10 +27,6 @@ class Gaddag {
 
         Gaddag& addWord(const std::string& word);
 
-        std::unique_ptr<
-            std::vector<
-                std::string>> containsArray(const unsigned char c) const;
-
         bool search(const std::string& word) const;
 
         bool searchPrivate(const std::string& word, Node* start = nullptr) const;

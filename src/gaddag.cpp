@@ -15,7 +15,6 @@ Gaddag::Gaddag() {
 }
 
 Gaddag::Gaddag(const string fileName) : Gaddag() {
-    auto start = chrono::high_resolution_clock::now();
     ifstream stream(fileName);
 
     try {
@@ -35,10 +34,6 @@ Gaddag::Gaddag(const string fileName) : Gaddag() {
     }
 
     stream.close();
-    auto end = chrono::high_resolution_clock::now();
-
-    cout << "Exec Time Constructor : " <<
-        chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 }
 
 const Node* Gaddag::getHead() const {
@@ -165,39 +160,6 @@ bool Gaddag::searchPrivate(const string& word, Node* start) const {
     }
 }
 
-unique_ptr<vector<string>> Gaddag::containsArray(const unsigned char c) const {
-    unique_ptr<vector<string>> tab = make_unique<vector<string>>();
-
-    Node* current = head->getChildByLetter(c);
-    if(current == Node::NO_NODE) return tab;
-
-    stack<WordPair> stack({{ current,
-                             string().append(1, static_cast<char>(c)) }});
-    WordPair strPair;
-    string currentWord;
-    Node* currentNode;
-
-    while(!stack.empty()) {
-        strPair = stack.top();
-        currentNode = strPair.first;
-        currentWord = strPair.second;
-        stack.pop();
-
-        if(currentNode->isFinal()) {
-            tab->push_back(Utils::toRegularWord(strPair.second));
-        }
-
-        for(Node* node : currentNode->getChilds()) {
-            if(node != Node::NO_NODE) {
-                string newWord = currentWord + static_cast<char>(node->getLetter());
-                stack.push({ node, newWord });
-            }
-        }
-    }
-
-
-    return tab;
-}
 
 bool Gaddag::search(const std::string &word) const {
     if(word.length() <= 1) {
@@ -249,10 +211,5 @@ void Gaddag::print() const {
 }
 
 Gaddag::~Gaddag() {
-    auto start = chrono::high_resolution_clock::now();
     delete head;
-    auto end = chrono::high_resolution_clock::now();
-
-    cout << "Exec Time Destructor : " <<
-        chrono::duration_cast<chrono::milliseconds>(end-start).count() << endl;
 }
