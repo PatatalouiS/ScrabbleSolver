@@ -2,14 +2,23 @@
 #include <chrono>
 #include <sstream>
 #include <fstream>
+#include <unistd.h>
 
 #include "utils.hpp"
 #include "globals.hpp"
 #include "suzettecheck.hpp"
+#include "algorithm"
 
 using namespace std;
 
-const Gaddag Solver::dico(DICO_PATH);
+Solver::Solver(const Gaddag& dico) : dico(dico) {}
+
+Solver::SearchingParams::SearchingParams(const Node* n, const SpotPos& start,
+                                         const PlayerBag& p, const Direction d):
+    node(n), position(start), startPos(start), availableLetters(p), word(""),
+    plusStatus(PlusStatus::NOT_USED), direction(d), mainScore(0), mainFactor(1),
+    additionnalScore(0), nbUsedLetters(0) {}
+
 
 namespace Functors {
     auto plusFunc = [](const char a, const char b) -> char {
@@ -30,7 +39,12 @@ namespace {
             : a;
     }
 
-    const Stroke& addStroke(unique_ptr<Solver::StrokesSet>& result,
+    bool validStrokeCandidate(const Solver::SearchingParams& params) {
+        return params.node->isFinal() &&
+               params.nbUsedLetters != 0;
+    }
+
+    const Stroke& addStroke(Solver::StrokesSet& result,
                           const Solver::SearchingParams& params) {
         unsigned int totalScore = (params.mainScore * params.mainFactor)
                 + params.additionnalScore;
@@ -47,43 +61,58 @@ namespace {
                         PlayerBag(params.availableLetters.data()),
                         totalScore });
 
-        return *(result->emplace(toAdd).first);
+        return *(result.emplace(toAdd).first);
     }
 }
 
-Solver::Solver() {}
+void Solver::solveConfig(const ScrabbleConfig& config) {
+    cout << "Your Configuration :" << endl
+         <<  config.board << endl;
 
-Board Solver::solveConfig(const Config& config) {
-    cout << config.board << endl;
-    auto availableStrokes = getAvailableStrokes(config);
+    auto availableStrokes = *getAvailableStrokes(config);
     Stroke bestStroke = availableStrokes.second;
 
+    cout << Board(config.board).putStroke(bestStroke);
     cout << "--- BEST STROKE ---" << endl
          << "With letters : " << config.playerBag << endl
          << "We can play Word  : " << Utils::toRegularWord(bestStroke.word)
          << endl << "With a score of : " << bestStroke.score << " pts." << endl;
-        Suzette::check(config.board, config.playerBag);
 
-    return Board(config.board).putStroke(bestStroke);
+    if(SUZETTE_CHECK) {
+        auto [ score, board ] = Suzette::check(config.board, config.playerBag);
+        cout << "Score By Suzette : " << score << " pts." << endl;
+    }
 }
 
 void Solver::solveFromScratch() {
     LetterBag mainBag;
     unsigned int totalScore = 0;
+    unsigned int suzetteScore = 0;
 
-    Config config {
+    ScrabbleConfig config {
         PlayerBag(mainBag),
         Board()
     };
 
     while(!mainBag.isEmpty() || !config.playerBag.isEmpty()) {
-        auto availableStrokes = getAvailableStrokes(config);
+        auto availableStrokes = *getAvailableStrokes(config);
         Stroke bestStroke = availableStrokes.second;
+
+        if(bestStroke.score == 0) {
+            break;
+        }
+
+        if(SUZETTE_CHECK) {
+            suzetteScore = Suzette::check(config.board, config.playerBag).first;
+            assert(bestStroke.score >= suzetteScore);
+        }
+
         totalScore += bestStroke.score;
         PlayerBag lastPlayerBag(config.playerBag);
-        Suzette::check(config.board, config.playerBag);
         config.playerBag = PlayerBag(bestStroke.playerBag.fillWith(mainBag));
+        config.board.putStroke(bestStroke);
 
+        cout << config.board << endl;
         cout << "--- BEST STROKE ---" << endl
              << "With letters : " << lastPlayerBag << endl
              << "We can play Word  : " << Utils::toRegularWord(bestStroke.word)
@@ -91,19 +120,22 @@ void Solver::solveFromScratch() {
              << "With a score of : " << bestStroke.score << " pts." << endl
              << "Total Score " << totalScore << endl
              << "Letters remaining : " << mainBag.getNbLetters() << endl
-             << "Strokes founded : " << availableStrokes.first->size() << endl
+             << "Strokes founded : " << availableStrokes.first.size() << endl
              << "New PlayerBag : " << config.playerBag << endl;
 
-        config.board.putStroke(bestStroke);
-        cout << config.board << endl;
+        if(SUZETTE_CHECK) {
+             cout << "Score By Suzette : " << suzetteScore << " pts." << endl;
+        }
 
-        ofstream file("./data/lastStroke");
+        ofstream file("./data/lastStroke.txt");
         config.board.save(file);
         file.close();
 
-        string wait;
-
-        getline(cin, wait);
+//        string wait;
+//        getline(cin, wait);
+        usleep(500000);
+        Utils::clearScreen();
+        Utils::printHeader();
     }
 
     cout << endl << "There is no more Stroke to play ! End of the series" << endl;
@@ -142,9 +174,8 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     SpotPos pos = params.position;
     Direction direction = params.direction;
 
-    unsigned int score = LetterBag::getLetterPoints(candidate)
+    unsigned int score = Utils::getLetterPoints(candidate)
             * board(params.position).bonus.letter_factor;
-
     unsigned int factor = board(params.position).bonus.word_factor;
 
     string orthogonalWord({ static_cast<char>(candidate) });
@@ -156,43 +187,22 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     char startMovingIndex = movingIndex;
     movingIndex--;
 
-//    if(params.direction == Direction::HORIZONTAL) {
-//        if(params.startPos.indexLine == 12 && params.startPos.indexCol == 7) {
-//            if(params.position.indexLine == 12 && params.position.indexCol == 7) {
-//                cout << pos << endl << board(pos).isEmpty();
-//            }
-//        }
-//    }
-
-
     while(Utils::validPos(pos) && !board(pos).isEmpty()) {
         unsigned char nextLetter = board(pos).letter;
         orthogonalWord += static_cast<char>(nextLetter);
-        score += LetterBag::getLetterPoints(nextLetter);
+        score += Utils::getLetterPoints(nextLetter);
         movingIndex--;
     }
 
     orthogonalWord += static_cast<char>(LINK_LETTER);
-//    movingIndex = direction == Direction::HORIZONTAL
-//            ? params.position.indexLine + 1
-//            : params.position.indexCol + 1;
-
     movingIndex = startMovingIndex + 1;
 
     while(Utils::validPos(pos) && !board(pos).isEmpty()) {
         unsigned char nextLetter = board(pos).letter;
         orthogonalWord += static_cast<char>(nextLetter);
-        score += LetterBag::getLetterPoints(nextLetter);
+        score += Utils::getLetterPoints(nextLetter);
         movingIndex++;
     }
-
-//    if(params.direction == Direction::HORIZONTAL) {
-//        if(params.startPos.indexLine == 12 && params.startPos.indexCol == 7) {
-//            if(orthogonalWord.size() > 2) {
-//                cout <<endl << params.word << candidate << " " << orthogonalWord << endl;
-//            }
-//        }
-//    }
 
     if(orthogonalWord.size() <= 2) {
         return 0;
@@ -205,62 +215,29 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     return nullopt;
 }
 
-pair<unique_ptr<Solver::StrokesSet>, Stroke> Solver::getAvailableStrokes(const Config& config) {
-    Stroke bestStroke;
-    // vector for pushing valid stokes
-    unique_ptr<StrokesSet> array = make_unique<StrokesSet>();
-    // array of start cells, to begin serach
-    unique_ptr<NeighborsSet> startCellsArray = getNeighBors(config.board);
+unique_ptr<pair<Solver::StrokesSet, Stroke>>
+        Solver::getAvailableStrokes(const ScrabbleConfig& config) {
 
-    // stack for store states of research
+    auto result = make_unique<pair<StrokesSet, Stroke>>();
+    auto& [strokesArray, bestStroke] = *result;
+    auto startCellsArray = getStartSpots2(config.board);
     stack<SearchingParams> stack;
 
-    for(const SpotPos& position : *startCellsArray) {
-        SpotPos startPos{position.indexLine, position.indexCol};
-        //cout << "//////////////////////  CASE : " << int(position.indexLine)
-        //<< " " << int(position.indexCol) << endl;
-        SearchingParams startParams {
-             dico.getHead(),
-             startPos,
-             startPos,
-             config.playerBag,
-             "",
-             PlusStatus::NOT_USED,
-             Direction::HORIZONTAL,
-             0,
-             1,
-             0,
-             0
-        };
-
-        // push horizontal reqsearch start params
-        stack.push(startParams);
-        startParams.direction = Direction::VERTICAL;
-        // push vertical research start params
-        stack.push(startParams);
+    for(const auto& [ startPos, direction ] : *startCellsArray) {
+        stack.push({ dico.getHead(), startPos, config.playerBag, direction });
 
         while(!stack.empty()) {
             // read top of the stack
             SearchingParams currentParams = stack.top();
             stack.pop();
 
-//            if(startParams.direction == Direction::VERTICAL) {
-//                if(startPos.indexLine == 0 && startPos.indexCol == 10) {
-//                    cout << currentParams.word << endl;
-//                    if(currentParams.position.indexLine == 1 && currentParams.position.indexCol == 10) {
-//                        cout << currentParams.word << endl;
-//                    }
-//                }
-//            }
-
             if(Utils::validPos(currentParams.position)) {
                 Spot currentSpot = config.board(currentParams.position);
-
                 // there is no letter in the board at currentSpot
                 if(currentSpot.isEmpty()) {
-                    if(currentParams.node->isFinal()) {
-                        bestStroke = max(bestStroke,
-                                         addStroke(array, currentParams));
+                    if(validStrokeCandidate(currentParams)) {
+                        bestStroke = max(bestStroke, addStroke(strokesArray,
+                                                               currentParams));
                     }
 
                     followPlayerBagRoots(currentParams, stack, config);
@@ -277,45 +254,27 @@ pair<unique_ptr<Solver::StrokesSet>, Stroke> Solver::getAvailableStrokes(const C
             else if(currentParams.plusStatus == PlusStatus::NOT_USED) {
                 followPlusRoot(currentParams, stack);
             }
-            else if(currentParams.node->isFinal()){
-                bestStroke = max(bestStroke, addStroke(array, currentParams));
+            else if(validStrokeCandidate(currentParams)){
+                bestStroke = max(bestStroke, addStroke(strokesArray,
+                                                       currentParams));
             }
         }
     }
-    return { move(array), bestStroke };
+    return result;
 }
 
 void Solver::followPlayerBagRoots(SearchingParams &params,
                                   std::stack<SearchingParams> &stack,
-                                  const Config& config) {
+                                  const ScrabbleConfig& config) {
     const Spot& currentSpot = config.board(params.position);
     PlayerBag currentLetters = params.availableLetters;
-
-//    if(params.direction == Direction::VERTICAL) {
-//        if(params.startPos.indexLine == 0 && params.startPos.indexCol == 10) {
-//            //cout << params.word << endl << "coucou";
-//            if(params.position.indexLine == 1 && params.position.indexCol == 10) {
-//                cout << params.word << endl;
-//            }
-//        }
-//    }
-
     // parcours du tableau de lettre possibles
     for(unsigned char letter : params.availableLetters.data()) {
         Node* child = params.node->getChildByLetter(letter);
         // l'enfant associé a la lettre existe
         if(child != Node::NO_NODE) {
-            unsigned int score = LetterBag::getLetterPoints(letter)
+            unsigned int score = Utils::getLetterPoints(letter)
                 * currentSpot.bonus.letter_factor;
-
-//            if(params.direction == Direction::VERTICAL) {
-//                if(params.startPos.indexLine == 0 && params.startPos.indexCol == 10) {
-//                    //cout << params.word << letter <<endl << "coucou";
-//                    if(params.position.indexLine == 1 && params.position.indexCol == 10) {
-//                       // cout << params.word << letter<< endl;
-//                    }
-//                }
-//            }
 
             SearchingParams nextParams(params);
             nextParams.node = child;
@@ -326,30 +285,10 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
             nextParams.nbUsedLetters++;
 
             auto additionnalScore = checkOtherWords(params, letter, config.board);
-
-//            if(params.direction == Direction::VERTICAL) {
-//                if(params.startPos.indexLine == 0 && params.startPos.indexCol == 10) {
-//                    cout <<endl << nextParams.word << " " << *additionnalScore << endl;
-//                    if(params.position.indexLine == 1 && params.position.indexCol == 10) {
-//                        cout << params.word << endl;
-//                    }
-//                }
-//            }
-
             // if orthogonal word not exists or is valid
             if(additionnalScore.has_value()) {
                 nextParams.additionnalScore += *additionnalScore;
                 nextParams.position = computeNextPos(params);
-
-//                if(params.direction == Direction::VERTICAL) {
-//                    if(params.startPos.indexLine == 0 && params.startPos.indexCol == 10) {
-//                        cout <<endl << nextParams.word << " " << *additionnalScore << endl;
-//                        if(params.position.indexLine == 1 && params.position.indexCol == 10) {
-//                            cout << params.word << endl;
-//                        }
-//                    }
-//                }
-
                 stack.push(nextParams);
             }
         }
@@ -358,6 +297,7 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
 
 void Solver::followPlusRoot(SearchingParams &params,
                             stack<SearchingParams> &stack) {
+
     Node* linkChild = params.node->getChildByLetter(LINK_LETTER);
     // if PlusRoot exists
     if(linkChild != Node::NO_NODE) {
@@ -372,22 +312,21 @@ void Solver::followPlusRoot(SearchingParams &params,
 
 void Solver::followForcedRoot(SearchingParams &params,
                               stack<SearchingParams>& stack,
-                              const Config& config) {
+                              const ScrabbleConfig& config) {
 
     unsigned char forcedLetter = config.board(params.position).letter;
     Node* forcedNode = params.node->getChildByLetter(forcedLetter);
-
     // if ForcedRoot exists
     if(forcedNode != Node::NO_NODE) {
         params.node = forcedNode;
         params.position = computeNextPos(params);
         params.word += static_cast<char>(forcedLetter);
-        params.mainScore += LetterBag::getLetterPoints(forcedLetter);
+        params.mainScore += Utils::getLetterPoints(forcedLetter);
         stack.push(params);
     }
 }
 
-unique_ptr<Solver::NeighborsSet> Solver::getNeighBors(const Board& board) {
+unique_ptr<Solver::NeighborsSet> Solver::getStartSpots(const Board& board) {
     unique_ptr set = make_unique<NeighborsSet>();
 
     if(board.isEmpty()) {
@@ -415,6 +354,59 @@ unique_ptr<Solver::NeighborsSet> Solver::getNeighBors(const Board& board) {
             }
         }
     }
-
     return set;
 }
+
+unique_ptr<Solver::NeighborsSet2> Solver::getStartSpots2(const Board& board) {
+    using namespace Utils;
+    unique_ptr set = make_unique<NeighborsSet2>();
+
+    if(board.isEmpty()) {
+        set->insert({{ CENTER_OF_BOARD, Direction::VERTICAL },
+                     { CENTER_OF_BOARD, Direction::HORIZONTAL }});
+    }
+    else {
+        static const array dArray = { Direction::VERTICAL,
+                                      Direction::HORIZONTAL };
+
+        for(const Direction d : dArray) {
+            for(unsigned char line = 0; line < Board::SIZE; line++) {
+                for(unsigned char col = 0; col < Board::SIZE; col++) {
+                    SpotPos pos { char(line), char(col) };
+
+                    if(board(pos).isEmpty()) {
+                        char& movingIndex = d == Direction::VERTICAL
+                                ? pos.indexCol
+                                : pos.indexLine;
+
+                        movingIndex++;
+                        SpotPos neighbor1(pos);
+                        movingIndex -= 2;
+                        SpotPos neighbor2(pos);
+                        movingIndex++;
+
+                        if((validPos(neighbor1) && !board(neighbor1).isEmpty()) ||
+                           (validPos(neighbor2) && !board(neighbor2).isEmpty())) {
+                            set->insert({ pos, d });
+                        }
+                    }
+                    else {
+                        char& movinIndex = d == Direction::VERTICAL
+                                ? pos.indexLine
+                                : pos.indexCol;
+
+                        movinIndex++;
+                        SpotPos neighbor(pos);
+                        movinIndex--;
+
+                        if(!validPos(neighbor) || board(neighbor).isEmpty()) {
+                            set->insert({ pos, d });
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return set;
+}
+

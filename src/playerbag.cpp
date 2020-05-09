@@ -7,7 +7,7 @@ PlayerBag::PlayerBag() : playerLetters() {
 }
 
 PlayerBag::PlayerBag(LetterBag& mainLetterBag) {
-    for(unsigned int i = 0; i < 7; ++i ) {
+    for(unsigned int i = 0; i < MAX_SIZE; ++i ) {
         playerLetters.push_back(mainLetterBag.pickRandomLetter());
     }
 }

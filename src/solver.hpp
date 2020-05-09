@@ -5,13 +5,8 @@
 #include <stack>
 #include <optional>
 
-#include "board.hpp"
+#include "scrabbleconfig.hpp"
 #include "stroke.hpp"
-
-struct Config {
-    PlayerBag playerBag;
-    Board board;
-};
 
 class Solver {
     public :
@@ -19,10 +14,11 @@ class Solver {
         using StrokesSet = std::unordered_set<Stroke>;
         using NeighborsSet = std::unordered_set<SpotPos>;
         struct SearchingParams;
+        using NeighborsSet2 = std::unordered_set<std::pair<SpotPos, Direction>>;
 
     private:
 
-        static const Gaddag dico;
+        const Gaddag& dico;
 
         enum class PlusStatus {
             USED,
@@ -30,27 +26,29 @@ class Solver {
             NOT_USED
         };
 
-        static std::pair<std::unique_ptr<StrokesSet>, Stroke> getAvailableStrokes(const Config& conf);
+        std::unique_ptr<std::pair<StrokesSet, Stroke>> getAvailableStrokes(const ScrabbleConfig& conf);
 
-        static std::unique_ptr<NeighborsSet> getNeighBors(const Board& b);
+        std::unique_ptr<NeighborsSet> getStartSpots(const Board& b);
 
-        static std::optional<unsigned int> checkOtherWords(
+        std::unique_ptr<NeighborsSet2> getStartSpots2(const Board& board);
+
+        std::optional<unsigned int> checkOtherWords(
                              const SearchingParams& params,
                              const unsigned char candidate,
                              const Board& board);
 
-        static SpotPos computeNextPos(const SearchingParams& params);
+        SpotPos computeNextPos(const SearchingParams& params);
 
-        static void followForcedRoot(SearchingParams& params,
+        void followForcedRoot(SearchingParams& params,
                               std::stack<SearchingParams>& stack,
-                              const Config& config);
+                              const ScrabbleConfig& config);
 
-        static void followPlusRoot(SearchingParams& params,
+        void followPlusRoot(SearchingParams& params,
                             std::stack<SearchingParams>& stack);
 
-        static void followPlayerBagRoots(SearchingParams& params,
+        void followPlayerBagRoots(SearchingParams& params,
                                   std::stack<SearchingParams>& stack,
-                                  const Config& config );
+                                  const ScrabbleConfig& config );
 
     public:
 
@@ -66,11 +64,14 @@ class Solver {
             unsigned int mainFactor;
             unsigned int additionnalScore;
             unsigned int nbUsedLetters;
+
+            SearchingParams(const Node* n, const SpotPos& start,
+                            const PlayerBag& p, const Direction d);
         };
 
-        Solver();
+        Solver(const Gaddag& dico);
 
-        static Board solveConfig(const Config& config);
+        void solveConfig(const ScrabbleConfig& config);
 
         void solveFromScratch();
   };

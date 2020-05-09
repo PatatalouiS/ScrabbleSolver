@@ -6,30 +6,17 @@
 
 using namespace std;
 
-// Static Init Bloc
-
-const array<LetterBag::LetterSpecs, LetterBag::nbSymbols>
-    LetterBag::letterSpecsArray {{
-        { 1, 9 }, { 3, 2 }, { 3, 2 }, { 2, 3 }, { 1, 15 }, { 4, 2 },
-        { 2, 2 }, { 4, 2 }, { 1, 8 }, { 8, 1 }, { 10, 1 }, { 1, 5 },
-        { 2, 3 }, { 1, 6 }, { 1, 6 }, { 3, 2 }, { 8, 3 }, { 1, 6 },
-        { 1, 6 }, { 1, 6 }, { 1, 6 }, { 4, 2 }, { 10, 1 }, { 10, 1 },
-        { 10, 1 }, { 10, 1 }
-}};
-
 mt19937 LetterBag::generator(random_device{}());
 
-// Static Init Bloc
-
 LetterBag::LetterBag() {
-    unsigned int index;
-    unsigned int occurrences;
+    static const array<unsigned int, LetterBag::NB_SYMBOLS> occurrences {
+        9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3,
+        6, 6, 2, 3, 6, 6, 6, 6, 2, 1, 1, 1, 1
+    };
 
     for(unsigned char letter = 'A'; letter <= 'Z'; ++letter) {
-        index = Utils::charToIndex(letter);
-        occurrences = letterSpecsArray[index].occurrences;
-
-        for(unsigned int i = 0; i < occurrences; ++i) {
+        unsigned int index = Utils::charToIndex(letter);
+        for(unsigned int i = 0; i < occurrences[index]; ++i) {
             bag.push_back(letter);
             nbLetters++;
         }
@@ -66,8 +53,4 @@ void LetterBag::printBagContent() const {
     for(const unsigned char letter : bag) {
         cout << letter << endl;
     }
-}
-
-unsigned int LetterBag::getLetterPoints(const unsigned char letter) {
-    return letterSpecsArray[Utils::charToIndex(letter)].points;
 }

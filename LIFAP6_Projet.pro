@@ -26,6 +26,7 @@ HEADERS += src/board.hpp src/bonus.hpp src/spot.hpp \
     src/node.hpp \
     src/playerbag.hpp \
     src/prodcons.hpp \
+    src/scrabbleconfig.hpp \
     src/solver.hpp \
     src/spotpos.hpp \
     src/stroke.hpp \
@@ -40,6 +41,7 @@ SOURCES += src/board.cpp src/bonus.cpp src/spot.cpp src/test_board.cpp \
     src/letterbag.cpp \
     src/node.cpp \
     src/playerbag.cpp \
+    src/scrabbleconfig.cpp \
     src/solver.cpp \
     src/spotpos.cpp \
     src/stroke.cpp \

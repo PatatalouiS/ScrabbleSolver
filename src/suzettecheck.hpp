@@ -2,12 +2,15 @@
 #define SUZETTECHECK_HPP
 
 #include <string>
+
 #include "board.hpp"
 #include "playerbag.hpp"
+#include "scrabbleconfig.hpp"
 
 namespace Suzette {
 
-    void check(const Board& board, const PlayerBag& letters);
+    std::pair<unsigned int, Board> check(const Board& board,
+                                         const PlayerBag& letters);
 
 }
 
