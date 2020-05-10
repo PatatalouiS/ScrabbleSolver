@@ -25,7 +25,6 @@ unsigned char Node::getLetter() const {
 }
 
 Node* Node::getChildByLetter(const unsigned char letter) const {
-    assert((letter <= 'Z' && letter >= 'A') || (letter == '+'));
     return childs[Utils::charToIndex(letter)];
 }
 

@@ -2,6 +2,8 @@
 #define GADDAG_HPP
 
 #include "node.hpp"
+#include <memory>
+#include <vector>
 
 class Gaddag {
 

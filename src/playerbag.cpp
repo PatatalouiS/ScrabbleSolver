@@ -1,5 +1,6 @@
 #include "playerbag.hpp"
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 

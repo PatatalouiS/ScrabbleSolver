@@ -1,5 +1,6 @@
 #include "board.hpp"
 #include "utils.hpp"
+#include <cassert>
 
 using namespace std;
 
@@ -116,14 +117,14 @@ void Board::load(std::istream& in) {
 
 //access to the spots by coordinates
 Spot Board::operator()(unsigned char l, unsigned char c) const {
-		assert((l >= 0) && (l < SIZE));
-		assert((c >= 0) && (c < SIZE));
+		assert(l < SIZE);
+		assert(c < SIZE);
 	return spots[l*15 + c] ;
 }
 
 Spot& Board::operator()(unsigned char l, unsigned char c) {
-		assert((l >= 0) && (l < SIZE));
-		assert((c >= 0) && (c < SIZE));
+		assert(l < SIZE);
+		assert(c < SIZE);
 	return spots[l*15 + c] ;
 }
 
