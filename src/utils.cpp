@@ -23,6 +23,12 @@ unsigned char Utils::indexTochar(const unsigned int index) {
 }
 
 unsigned int Utils::getLetterPoints(const unsigned char letter) {
+    if(letter == JOKER_SYMBOL) {
+        return 0;
+    }
+
+    assert(letter <= 'Z' && letter >= 'A');
+
     static const array points {
         1, 3, 3, 2, 1, 4, 2, 4, 1, 8, 10, 1, 2,
         1, 1, 3, 8, 1, 1, 1, 1, 4, 10, 10, 10, 10
@@ -62,6 +68,34 @@ bool Utils::validPos(const SpotPos &spot) {
     return validIndex(spot.indexLine) && validIndex(spot.indexCol);
 }
 
+bool Utils::validConfig(const ScrabbleConfig& config, const bool jokers) {
+    const auto& [ playerBag, board ] = config;
+
+    if(playerBag.data().size() > PlayerBag::MAX_SIZE) {
+        return false;
+    }
+
+    unsigned int nbJokers = 0;
+
+    for(unsigned char letter : playerBag.data()) {
+        if(letter == JOKER_SYMBOL) {
+            nbJokers++;
+        }
+    }
+
+    if(!jokers && (nbJokers != 0)) {
+        cerr << "/!\\ Jokers detected but Joker Mode is disabled "
+             << "Please run with --jokers flag if you want to use jokers ! "
+             << "Abort... /!\\" << endl;
+        return false;
+    }
+    else if(!jokers && (nbJokers > 2)) {
+        cerr << "/!\\ Maximum number of Jokers is 2 ! Abort... /!\\" << endl;
+        return false;
+    }
+    return true;
+}
+
 SpotPos Utils::startPosStroke(const Stroke& stroke) {
     SpotPos start(stroke.pos);
 
@@ -82,13 +116,27 @@ void Utils::printHeader() {
          << " By CERBULEAN Ana-Maria and OLIVIE Maxime" << endl << endl;
 }
 
-void Utils::parseArgs(int argc, char ** argv) {
+void Utils::printOptions(const Utils::Options& opt) {
+    clearScreen();
+    printHeader();
+    cout << "Loop Mode : "
+         << (opt.loop ? "enabled" : "disabled") << endl;
+    cout << "Suzette Check : "
+         << (opt.suzette_check ? "enabled" : "disabled") << endl;
+    cout << "Use Jokers : "
+         << (opt.jokers ? "enabled" : "disabled") << endl;
+}
+
+Utils::Options Utils::parseArgs(int argc, char ** argv) {
     int opt;
+
+    Utils::Options options;
 
     while(true) {
         static struct option long_options[] = {
             { "suzette-check", no_argument, nullptr, 's' },
-            { "mode", required_argument, nullptr, 'm' },
+            { "loop", no_argument, nullptr, 'l' },
+            { "jokers", no_argument, nullptr, 'j' },
             { nullptr, 0, nullptr, 0 }
         };
 
@@ -101,26 +149,23 @@ void Utils::parseArgs(int argc, char ** argv) {
         }
 
         switch(opt) {
-            case 's':
-              SUZETTE_CHECK = true;
-              break;
+            case 's' :
+                options.suzette_check = true;
+                break;
 
-            case 'm':
-              if((string(optarg)) != "loop" && (string(optarg) != "singleshot")) {
-                  cerr << "Usage : Parameters for option --mode must be 'loop' or 'singleshot'" << endl;
-                  cerr << "Instead, singleshot is used" << endl;
-                  MODE = "singleshot";
-              }
-              else {
-                   MODE = string(optarg);
-              }
-              break;
+            case 'l' :
+                options.loop = true;
+                break;
 
-            case '?':
-              break;
+            case 'j' :
+                options.jokers = true;
+                break;
 
-            default:
-              abort ();
+            case '?' : break;
+
+            default : abort ();
         }
     }
+
+    return options;
 }

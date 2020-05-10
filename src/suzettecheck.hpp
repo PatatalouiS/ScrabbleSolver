@@ -11,7 +11,6 @@ namespace Suzette {
 
     std::pair<unsigned int, Board> check(const Board& board,
                                          const PlayerBag& letters);
-
 }
 
 #endif // SUZETTECHECK_HPP

@@ -8,13 +8,13 @@ class PlayerBag {
 
     private :
 
-        static const unsigned int MAX_SIZE = 7;
-
         using PlayerLetters = std::vector<unsigned char>;
 
         PlayerLetters playerLetters;
 
     public:
+
+         static const unsigned int MAX_SIZE = 7;
 
          PlayerBag();
 

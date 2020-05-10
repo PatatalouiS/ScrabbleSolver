@@ -5,6 +5,12 @@
 
 namespace Utils {
 
+    struct Options {
+        bool loop = false;
+        bool jokers = false;
+        bool suzette_check = false;
+    };
+
     unsigned int charToIndex(const unsigned char letter);
 
     unsigned char indexTochar(const unsigned int index);
@@ -17,13 +23,17 @@ namespace Utils {
 
     bool validPos(const SpotPos& spot);
 
+    bool validConfig(const ScrabbleConfig& config, const bool jokers);
+
     SpotPos startPosStroke(const Stroke& stroke);
 
     void clearScreen();
 
     void printHeader();
 
-    void parseArgs(int argc, char ** argv);
+    void printOptions(const Options& opt);
+
+    Options parseArgs(int argc, char ** argv);
 };
 
 #endif // UTILS_HPP

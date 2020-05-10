@@ -20,13 +20,17 @@ class Solver {
 
         const Gaddag& dico;
 
+        bool suzette_check;
+        bool jokers;
+
         enum class PlusStatus {
             USED,
             IN_USE,
             NOT_USED
         };
 
-        std::unique_ptr<std::pair<StrokesSet, Stroke>> getAvailableStrokes(const ScrabbleConfig& conf);
+        std::unique_ptr<std::pair<StrokesSet, Stroke>> getAvailableStrokes(
+                            const ScrabbleConfig& conf);
 
         std::unique_ptr<NeighborsSet> getStartSpots(const Board& b);
 
@@ -50,6 +54,10 @@ class Solver {
                                   std::stack<SearchingParams>& stack,
                                   const ScrabbleConfig& config );
 
+        void followJokerRoots(SearchingParams& params,
+                               std::stack<SearchingParams>& stack,
+                               const ScrabbleConfig& config);
+
     public:
 
         struct SearchingParams {
@@ -69,7 +77,7 @@ class Solver {
                             const PlayerBag& p, const Direction d);
         };
 
-        Solver(const Gaddag& dico);
+        Solver(const Gaddag& dico, const bool s = false, const bool j = false);
 
         void solveConfig(const ScrabbleConfig& config);
 

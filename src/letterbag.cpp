@@ -1,6 +1,7 @@
 
 #include <iostream>
 
+#include "globals.hpp"
 #include "letterbag.hpp"
 #include "utils.hpp"
 
@@ -8,7 +9,7 @@ using namespace std;
 
 mt19937 LetterBag::generator(random_device{}());
 
-LetterBag::LetterBag() {
+LetterBag::LetterBag(const bool jokers) {
     static const array<unsigned int, LetterBag::NB_SYMBOLS> occurrences {
         9, 2, 2, 3, 15, 2, 2, 2, 8, 1, 1, 5, 3,
         6, 6, 2, 3, 6, 6, 6, 6, 2, 1, 1, 1, 1
@@ -16,9 +17,22 @@ LetterBag::LetterBag() {
 
     for(unsigned char letter = 'A'; letter <= 'Z'; ++letter) {
         unsigned int index = Utils::charToIndex(letter);
-        for(unsigned int i = 0; i < occurrences[index]; ++i) {
+        if(jokers && (letter == 'Q')) {
             bag.push_back(letter);
             nbLetters++;
+        }
+        else {
+            for(unsigned int i = 0; i < occurrences[index]; ++i) {
+                bag.push_back(letter);
+                nbLetters++;
+            }
+        }
+    }
+
+    if(jokers) {
+        for(unsigned int i = 0; i < NB_JOKERS; ++i) {
+             bag.push_back(JOKER_SYMBOL);
+             nbLetters++;
         }
     }
 }

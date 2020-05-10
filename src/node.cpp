@@ -1,6 +1,8 @@
 #include "node.hpp"
 #include "utils.hpp"
 
+#include <cassert>
+
 using namespace std;
 
 Node::Node(const unsigned char letter, const bool final) {
@@ -21,6 +23,7 @@ unsigned char Node::getLetter() const {
 }
 
 Node* Node::getChildByLetter(const unsigned char letter) const {
+    assert((letter <= 'Z' && letter >= 'A') || (letter == '+'));
     return childs[Utils::charToIndex(letter)];
 }
 

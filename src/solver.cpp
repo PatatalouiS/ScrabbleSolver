@@ -11,7 +11,8 @@
 
 using namespace std;
 
-Solver::Solver(const Gaddag& dico) : dico(dico) {}
+Solver::Solver(const Gaddag& dico, const bool s, const bool j)
+    : dico(dico), suzette_check(s), jokers(j) {}
 
 Solver::SearchingParams::SearchingParams(const Node* n, const SpotPos& start,
                                          const PlayerBag& p, const Direction d):
@@ -49,7 +50,7 @@ namespace {
         unsigned int totalScore = (params.mainScore * params.mainFactor)
                 + params.additionnalScore;
 
-        if(params.nbUsedLetters == 7) {
+        if(params.nbUsedLetters == PlayerBag::MAX_SIZE) {
             totalScore += SCRABBLE_BONUS;
         }
 
@@ -78,14 +79,18 @@ void Solver::solveConfig(const ScrabbleConfig& config) {
          << "We can play Word  : " << Utils::toRegularWord(bestStroke.word)
          << endl << "With a score of : " << bestStroke.score << " pts." << endl;
 
-    if(SUZETTE_CHECK) {
+    if(suzette_check) {
         auto [ score, board ] = Suzette::check(config.board, config.playerBag);
         cout << "Score By Suzette : " << score << " pts." << endl;
     }
+
+    ofstream file("./data/lastStroke.txt");
+    config.board.save(file);
+    file.close();
 }
 
 void Solver::solveFromScratch() {
-    LetterBag mainBag;
+    LetterBag mainBag(jokers);
     unsigned int totalScore = 0;
     unsigned int suzetteScore = 0;
 
@@ -102,7 +107,7 @@ void Solver::solveFromScratch() {
             break;
         }
 
-        if(SUZETTE_CHECK) {
+        if(suzette_check) {
             suzetteScore = Suzette::check(config.board, config.playerBag).first;
             assert(bestStroke.score >= suzetteScore);
         }
@@ -123,7 +128,7 @@ void Solver::solveFromScratch() {
              << "Strokes founded : " << availableStrokes.first.size() << endl
              << "New PlayerBag : " << config.playerBag << endl;
 
-        if(SUZETTE_CHECK) {
+        if(suzette_check) {
              cout << "Score By Suzette : " << suzetteScore << " pts." << endl;
         }
 
@@ -131,14 +136,15 @@ void Solver::solveFromScratch() {
         config.board.save(file);
         file.close();
 
-//        string wait;
-//        getline(cin, wait);
-        usleep(500000);
+        string wait;
+        getline(cin, wait);
+        //usleep(500000);
         Utils::clearScreen();
         Utils::printHeader();
     }
 
-    cout << endl << "There is no more Stroke to play ! End of the series" << endl;
+    cout << endl << "There is no more Stroke to play ! "
+         << "End of the series" << endl;
 }
 
 SpotPos Solver::computeNextPos(const SearchingParams& params) {
@@ -266,30 +272,64 @@ unique_ptr<pair<Solver::StrokesSet, Stroke>>
 void Solver::followPlayerBagRoots(SearchingParams &params,
                                   std::stack<SearchingParams> &stack,
                                   const ScrabbleConfig& config) {
+
     const Spot& currentSpot = config.board(params.position);
-    PlayerBag currentLetters = params.availableLetters;
+    const PlayerBag& currentLetters = params.availableLetters;
     // parcours du tableau de lettre possibles
     for(unsigned char letter : params.availableLetters.data()) {
-        Node* child = params.node->getChildByLetter(letter);
-        // l'enfant associé a la lettre existe
-        if(child != Node::NO_NODE) {
-            unsigned int score = Utils::getLetterPoints(letter)
-                * currentSpot.bonus.letter_factor;
+        // if joker mode is enabled, try all the letters of alphabet
+        if(jokers && (letter == JOKER_SYMBOL)) {
+            followJokerRoots(params, stack, config);
+        }
+        else {
+            Node* child = params.node->getChildByLetter(letter);
+            // l'enfant associé a la lettre existe
+            if(child != Node::NO_NODE) {
+                unsigned int score = Utils::getLetterPoints(letter)
+                    * currentSpot.bonus.letter_factor;
 
-            SearchingParams nextParams(params);
-            nextParams.node = child;
-            nextParams.availableLetters = currentLetters.pop(letter);
-            nextParams.word += static_cast<char>(letter);
-            nextParams.mainScore += score;
-            nextParams.mainFactor *= currentSpot.bonus.word_factor;
-            nextParams.nbUsedLetters++;
+                auto additionnalScore = checkOtherWords(params, letter,
+                                                        config.board);
+                // if orthogonal word not exists or is valid
+                if(additionnalScore.has_value()) {
+                    SearchingParams nextParams(params);
+                    nextParams.node = child;
+                    nextParams.availableLetters = currentLetters.pop(letter);
+                    nextParams.word += static_cast<char>(letter);
+                    nextParams.mainScore += score;
+                    nextParams.mainFactor *= currentSpot.bonus.word_factor;
+                    nextParams.nbUsedLetters++;
+                    nextParams.additionnalScore += *additionnalScore;
+                    nextParams.position = computeNextPos(params);
+                    stack.emplace(nextParams);
+                }
+            }
+        }
+    }
+}
 
-            auto additionnalScore = checkOtherWords(params, letter, config.board);
-            // if orthogonal word not exists or is valid
+void Solver::followJokerRoots(SearchingParams &params,
+                               std::stack<SearchingParams> &stack,
+                               const ScrabbleConfig& config) {
+
+    const Spot& currentSpot = config.board(params.position);
+    const PlayerBag& currentLetters = params.availableLetters;
+
+    for(const Node* child : params.node->getChilds()) {
+        if(child != Node::NO_NODE && child->getLetter() != LINK_LETTER) {
+            unsigned char letter2 = child->getLetter();
+            auto additionnalScore = checkOtherWords(params, letter2,
+                                                    config.board);
             if(additionnalScore.has_value()) {
+                SearchingParams nextParams(params);
+                nextParams.node = child;
+                nextParams.availableLetters = currentLetters.pop(JOKER_SYMBOL);
+                nextParams.word += static_cast<char>(letter2);
+                nextParams.mainFactor *= currentSpot.bonus.word_factor;
+                nextParams.nbUsedLetters++;
                 nextParams.additionnalScore += *additionnalScore;
                 nextParams.position = computeNextPos(params);
-                stack.push(nextParams);
+                stack.emplace(nextParams);
             }
         }
     }
@@ -306,7 +346,7 @@ void Solver::followPlusRoot(SearchingParams &params,
         params.position = computeNextPos(params);
         params.word += static_cast<char>(LINK_LETTER);
         params.plusStatus = PlusStatus::USED;
-        stack.push(params);
+        stack.emplace(params);
     }
 }
 
@@ -322,7 +362,7 @@ void Solver::followForcedRoot(SearchingParams &params,
         params.position = computeNextPos(params);
         params.word += static_cast<char>(forcedLetter);
         params.mainScore += Utils::getLetterPoints(forcedLetter);
-        stack.push(params);
+        stack.emplace(params);
     }
 }
 
@@ -409,4 +449,3 @@ unique_ptr<Solver::NeighborsSet2> Solver::getStartSpots2(const Board& board) {
     }
     return set;
 }
-

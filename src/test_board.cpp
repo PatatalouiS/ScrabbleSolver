@@ -7,29 +7,22 @@
 using namespace std;
 using namespace Utils;
 
-std::string MODE = "singleshot";
-bool SUZETTE_CHECK = false;
-
 int main(int argc, char** argv) {
-    clearScreen();
-    parseArgs(argc, argv);
-
-    printHeader();
-    cout << "Used MODE : " << MODE << endl;
-    cout << "Suzette Check : "
-         << (SUZETTE_CHECK ? "enabled" : "disabled") << endl;
+    Options options = parseArgs(argc, argv);
+    printOptions(options);
 
     Gaddag gaddag(DICO_PATH);
+    Solver solver(gaddag, options.suzette_check, options.jokers);
 
-    Solver solver(gaddag);
-
-    if(MODE == "singleshot") {
-        ScrabbleConfig config = ScrabbleConfig::loadFromFile(CONFIG_BOARD);
-        solver.solveConfig(config);
-    }
-    else {
+    if(options.loop) {
         while(true) {
             solver.solveFromScratch();
+        }
+    }
+    else {
+        ScrabbleConfig config = ScrabbleConfig::loadFromFile(CONFIG_BOARD);
+        if(validConfig(config, options.jokers)) {
+            solver.solveConfig(config);
         }
     }
 
