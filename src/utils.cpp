@@ -1,10 +1,7 @@
 #include <cassert>
-#include <vector>
-#include <array>
 #include <getopt.h>
 
 #include "utils.hpp"
-#include "globals.hpp"
 
 using namespace std;
 
@@ -103,7 +100,7 @@ SpotPos Utils::startPosStroke(const Stroke& stroke) {
             ?  start.indexCol
             :  start.indexLine;
 
-    movingIndex -= (stroke.word.find(LINK_LETTER) - 1);
+    movingIndex -= (stroke.word.find(Gaddag::LINK_LETTER) - 1);
     return start;
 }
 

@@ -9,11 +9,8 @@ bool SpotPos::operator==(const SpotPos &other) const {
 }
 
 ostream& operator<<(ostream& out, const SpotPos& sp) {
-    return out << "( "
-               << int(sp.indexLine)
-               << " , "
-               << int(sp.indexCol)
-               << " )";
+    return out << "( " << int(sp.indexLine)
+               << " , " << int(sp.indexCol) << " )";
 }
 
 size_t hash<SpotPos>::operator()(const SpotPos& pos) const {
@@ -21,7 +18,8 @@ size_t hash<SpotPos>::operator()(const SpotPos& pos) const {
     return hash(pos.indexLine) ^ (hash(pos.indexCol) << 1);
 }
 
-size_t hash<pair<SpotPos, Direction>>::operator()(const pair<SpotPos, Direction>& p) const {
+size_t hash<pair<SpotPos, Direction>>::operator()(const pair<SpotPos,
+                                                  Direction>& p) const {
     return hash<SpotPos>()(p.first)
            ^ (hash<Direction>()(p.second) << 1);
 }

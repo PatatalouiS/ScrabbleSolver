@@ -11,6 +11,8 @@ namespace Utils {
         bool suzette_check = false;
     };
 
+    Options parseArgs(int argc, char ** argv);
+
     unsigned int charToIndex(const unsigned char letter);
 
     unsigned char indexTochar(const unsigned int index);
@@ -32,8 +34,6 @@ namespace Utils {
     void printHeader();
 
     void printOptions(const Options& opt);
-
-    Options parseArgs(int argc, char ** argv);
 };
 
 #endif // UTILS_HPP

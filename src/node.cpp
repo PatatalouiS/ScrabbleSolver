@@ -1,8 +1,6 @@
 #include "node.hpp"
 #include "utils.hpp"
 
-#include <cassert>
-
 using namespace std;
 
 Node::Node(const unsigned char letter, const bool final) {
@@ -15,6 +13,10 @@ Node::Node(const unsigned char letter, const bool final) {
 }
 
 const ChildsArray& Node::getChilds() const {
+    return childs;
+}
+
+ChildsArray& Node::getChilds() {
     return childs;
 }
 

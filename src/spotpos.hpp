@@ -1,8 +1,8 @@
 #ifndef SPOTPOS_HPP
 #define SPOTPOS_HPP
 
-#include <functional>
 #include <iostream>
+
 #include "direction.hpp"
 
 struct SpotPos {
@@ -11,8 +11,6 @@ struct SpotPos {
 
     bool operator==(const SpotPos& other) const;
 };
-
-const SpotPos CENTER_OF_BOARD = SpotPos{ 7, 7 };
 
 std::ostream& operator<<(std::ostream& out, const SpotPos& sp);
 

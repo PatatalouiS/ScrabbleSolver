@@ -20,7 +20,6 @@ OBJECTS_DIR= obj/
 HEADERS += src/board.hpp src/bonus.hpp src/spot.hpp \
     src/direction.hpp \
     src/gaddag.hpp \
-    src/globals.hpp \
     src/letterbag.hpp \
     src/node.hpp \
     src/playerbag.hpp \

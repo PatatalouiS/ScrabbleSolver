@@ -1,47 +1,42 @@
 #pragma once
 
 #include "spot.hpp"
-#include "gaddag.hpp"
-#include "letterbag.hpp"
-#include "playerbag.hpp"
 #include "stroke.hpp"
 
-#include <iostream>
-#include <string>
 #include <sstream>
 
 /* Scrabble board */
 
 struct Board {
-  //default initialization of a scrabble board
-  Board() ;
+    //default initialization of a scrabble board
+    Board() ;
 
-  //construct with another stringstream
-  Board(std::istream& ss);
+    //construct with another stringstream
+    Board(std::istream& ss);
 
-  //copy constructor;
-  Board(const Board& b);
+    //copy constructor;
+    Board(const Board& b);
 
-  static constexpr unsigned int SIZE = 15;
+    static constexpr unsigned int SIZE = 15;
 
-  //i/o to files
-  void save(std::ostream& out) const;
-  void load(std::istream& in) ;
+    //i/o to files
+    void save(std::ostream& out) const;
+    void load(std::istream& in) ;
 
-  Board& putWord(const SpotPos& pos, const std::string& w, const Direction d);
-  Board& putStroke(const Stroke& stroke);
+    Board& putWord(const SpotPos& pos, const std::string& w, const Direction d);
+    Board& putStroke(const Stroke& stroke);
 
-  //access to the spots by coordinates
-  Spot operator()(unsigned char ql, unsigned char c) const ;
-  Spot& operator()(unsigned char l, unsigned char c) ;
+    //access to the spots by coordinates
+    Spot operator()(unsigned char ql, unsigned char c) const ;
+    Spot& operator()(unsigned char l, unsigned char c) ;
 
-  Spot operator() (const SpotPos& sp) const;
-  Spot& operator() (const SpotPos& sp) ;
+    Spot operator() (const SpotPos& sp) const;
+    Spot& operator() (const SpotPos& sp) ;
 
-  bool isEmpty() const;
+    bool isEmpty() const;
 
-  //spots are public, and can therefore also be accessed b index
-  Spot spots[225] ;
+    //spots are public, and can therefore also be accessed b index
+    Spot spots[225] ;
 } ;
 
 //board display on the console

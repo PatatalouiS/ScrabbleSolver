@@ -18,11 +18,6 @@ std::ostream& operator <<(std::ostream& out, const Stroke& stroke) {
         << " | Score : " << stroke.score;
 }
 
-//size_t std::hash<Stroke>::operator()(const Stroke& s) const {
-//    return (std::hash<std::string>()(Utils::toRegularWord(s.word))
-//            ^ (std::hash<SpotPos>()(s.pos) << 1));
-//}
-
 size_t std::hash<Stroke>::operator()(const Stroke& s) const {
     return ((std::hash<std::string>()(s.word)
              ^ (std::hash<SpotPos>()(s.pos) << 1)) >> 1)

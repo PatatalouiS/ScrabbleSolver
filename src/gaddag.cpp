@@ -1,7 +1,5 @@
-#include <stack>
-#include <iostream>
+
 #include <fstream>
-#include <chrono>
 
 #include "gaddag.hpp"
 #include "utils.hpp"
@@ -56,14 +54,11 @@ unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
     auto reverseStringIt = reverseString.end() - 1;
     auto reverseEnd = reverseString.end();
 
-    string normalPart;
-    string reversePart;
-
     while(reverseStringIt >= reverseString.begin()) {
-        reversePart = reverseString;
+        string reversePart = reverseString;
         reversePart.assign(reverseStringIt, reverseEnd);
 
-        normalPart = normalString;
+        string normalPart = normalString;
         normalPart.assign(normalStringIt, normalEnd);
 
         array->push_back(reversePart
@@ -81,21 +76,14 @@ Gaddag& Gaddag::addWordPrivate(const string& word) {
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
     bool inserted = false;
-    unsigned char currentLetter;
-    unsigned char letterToInsert;
     Node* current = head;
-    Node* newNode;
-    Node* nextNode;
-    ChildsArray currentChilds;
 
     while(!inserted) {
-        letterToInsert = static_cast<unsigned char>(*wordIterator);
-        currentChilds = current->getChilds();
-        currentLetter = current->getLetter();
-        nextNode = current->getChildByLetter(letterToInsert);
+        unsigned char letterToInsert = static_cast<unsigned char>(*wordIterator);
+        Node* nextNode = current->getChildByLetter(letterToInsert);
 
-        if(nextNode == Node::NO_NODE) {
-            newNode = new Node(letterToInsert);
+        if(nextNode == nullptr) {
+            Node* newNode = new Node(letterToInsert);
             current->addChild(newNode);
             current = newNode;
         }
@@ -128,26 +116,16 @@ Gaddag& Gaddag::addWord(const std::string &word) {
     return *this;
 }
 
-bool Gaddag::searchPrivate(const string& word, Node* start) const {
-    //bool trouve = false;
-    Node* current = start == nullptr
-            ? head
-            : start;
-
+bool Gaddag::search(const string& word) const {
+    Node* current = head;
     const auto lastLetter = word.end()-1;
     auto wordIterator = word.begin();
-    ChildsArray currentChilds;
-    Node* nextNode;
-    unsigned char letterToSearch;
-    unsigned char currentLetter;
 
-    while(true) { //! trouve
-        letterToSearch = static_cast<unsigned char>(*wordIterator);
-        currentChilds = current->getChilds();
-        currentLetter = current->getLetter();
-        nextNode = current->getChildByLetter(letterToSearch);
+    while(true) {
+        unsigned char letterToSearch = static_cast<unsigned char>(*wordIterator);
+        Node* nextNode = current->getChildByLetter(letterToSearch);
 
-        if(nextNode == Node::NO_NODE) {
+        if(nextNode == nullptr) {
             return false;
         }
 
@@ -161,49 +139,46 @@ bool Gaddag::searchPrivate(const string& word, Node* start) const {
 }
 
 
-bool Gaddag::search(const std::string &word) const {
-    if(word.length() <= 1) {
-        return false;
-    }
+//bool Gaddag::search(const std::string &word) const {
+//    if(word.length() <= 1) {
+//        return false;
+//    }
 
-    Node* current = head;
-    const unsigned char firstLetter = static_cast<unsigned char>(word[0]);
-    Node* nextNode;
+//    Node* current = head;
+//    const unsigned char firstLetter = static_cast<unsigned char>(word[0]);
+//    Node* nextNode;
 
-    nextNode = current->getChildByLetter(firstLetter);
-    if(nextNode == Node::NO_NODE) {
-        return false;
-    }
+//    nextNode = current->getChildByLetter(firstLetter);
+//    if(nextNode == Node::NO_NODE) {
+//        return false;
+//    }
 
-    current = nextNode;
+//    current = nextNode;
 
-    nextNode = current->getChildByLetter(LINK_LETTER);
-    if(nextNode == Node::NO_NODE) {
-        return false;
-    }
+//    nextNode = current->getChildByLetter(LINK_LETTER);
+//    if(nextNode == Node::NO_NODE) {
+//        return false;
+//    }
 
-    return searchPrivate(word.substr(1, word.length() - 1),  nextNode);
-}
+//    return searchPrivate(word.substr(1, word.length() - 1),  nextNode);
+//}
 
 void Gaddag::print() const {
     stack<WordPair> stack({ make_pair(head, "") });
     WordPair current;
-    string currentWord;
-    Node* currentNode;
 
     while(!stack.empty()) {
-        current = stack.top();
-        currentNode = current.first;
-        currentWord = current.second;
+        auto [ currentNode, currentWord ] = stack.top();
         stack.pop();
 
         if(currentNode->isFinal()) {
-            cout << current.second << endl;
+            cout << currentWord << endl;
         }
 
         for(Node* node : currentNode->getChilds()) {
-            if(node != Node::NO_NODE) {
-                string newWord = currentWord + static_cast<char>(node->getLetter());
+            if(node != nullptr) {
+                string newWord = currentWord
+                        + static_cast<char>(node->getLetter());
                 stack.push({ node, newWord });
             }
         }

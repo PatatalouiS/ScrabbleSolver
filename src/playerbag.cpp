@@ -12,8 +12,7 @@ PlayerBag::PlayerBag(LetterBag& mainLetterBag) {
     }
 }
 
-PlayerBag::PlayerBag(const PlayerLetters& letters) : playerLetters(letters) {
-}
+PlayerBag::PlayerBag(const PlayerLetters& letters) : playerLetters(letters) {}
 
 PlayerBag::PlayerBag(const PlayerBag& bag) : playerLetters(bag.data()) {}
 
@@ -33,13 +32,6 @@ const PlayerBag::PlayerLetters& PlayerBag::data() const {
     return playerLetters;
 }
 
-void PlayerBag::print() const {
-    for(unsigned char c : playerLetters) {
-        cout << c;
-    }
-    cout << endl;
-}
-
 PlayerBag::PlayerLetters& PlayerBag::data() {
     return playerLetters;
 }
@@ -56,6 +48,5 @@ PlayerBag& PlayerBag::fillWith(LetterBag& mainLetterBag) {
 }
 
 std::ostream& operator << (std::ostream& stream, const PlayerBag& pb) {
-    string letters(pb.data().begin(), pb.data().end());
-    return stream << letters;
+    return stream << string(pb.data().begin(), pb.data().end());
 }

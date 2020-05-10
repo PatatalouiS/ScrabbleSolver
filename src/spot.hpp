@@ -1,31 +1,31 @@
 #pragma once
 
-#include "bonus.hpp"
 #include <iostream>
-#include "unordered_set"
+
+#include "bonus.hpp"
 
 /* A spot on the board to place a letter */
 
 struct Spot {
   //default initialization, no letter, no bonus
-  Spot() :
-    letter(0)
-  {}
+	Spot() :
+		letter(0)
+	{}
 
-  //bonus spot initialization
-  // * lf is the bonus letter factor
-  // * wf is the bonus word factor
-  Spot(unsigned char lf, unsigned char wf) :
-    letter(0), bonus(lf, wf)
-  {}
+	//bonus spot initialization
+	// * lf is the bonus letter factor
+	// * wf is the bonus word factor
+	Spot(unsigned char lf, unsigned char wf) :
+		letter(0), bonus(lf, wf)
+	{}
 
-  //the letter placed on the spot, 0 if none
-  unsigned char letter ;
+	//the letter placed on the spot, 0 if none
+	unsigned char letter ;
 
-  //the bonus present on the spot
-  Bonus bonus ;
+	//the bonus present on the spot
+	Bonus bonus ;
 
-  bool isEmpty() const;
+	bool isEmpty() const;
 } ;
 
 //display of the spot contents

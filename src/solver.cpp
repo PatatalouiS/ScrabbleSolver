@@ -1,38 +1,27 @@
 ﻿
-#include <chrono>
 #include <sstream>
 #include <fstream>
 #include <unistd.h>
 
 #include "utils.hpp"
-#include "globals.hpp"
 #include "suzettecheck.hpp"
 #include "algorithm"
 
 using namespace std;
 
-Solver::Solver(const Gaddag& dico, const bool s, const bool j)
-    : dico(dico), suzette_check(s), jokers(j) {}
-
-Solver::SearchingParams::SearchingParams(const Node* n, const SpotPos& start,
-                                         const PlayerBag& p, const Direction d):
-    node(n), position(start), startPos(start), availableLetters(p), word(""),
-    plusStatus(PlusStatus::NOT_USED), direction(d), mainScore(0), mainFactor(1),
-    additionnalScore(0), nbUsedLetters(0) {}
-
-
 namespace Functors {
     auto plusFunc = [](const char a, const char b) -> char {
-        return static_cast<char>(a + b);
+        return a + b;
     };
 
     auto minusFunc = [](const char a, const char b) -> char {
-        return static_cast<char>(a - b);
+        return a - b;
     };
 }
 
 namespace {
     constexpr unsigned int SCRABBLE_BONUS = 50;
+    constexpr SpotPos CENTER_OF_BOARD = SpotPos{ 7, 7 };
 
     const Stroke& max(const Stroke& a, const Stroke& b) {
         return b.score > a.score
@@ -42,7 +31,7 @@ namespace {
 
     bool validStrokeCandidate(const Solver::SearchingParams& params) {
         return params.node->isFinal() &&
-               params.nbUsedLetters != 0;
+               (params.nbUsedLetters != 0);
     }
 
     const Stroke& addStroke(Solver::StrokesSet& result,
@@ -65,6 +54,15 @@ namespace {
         return *(result.emplace(toAdd).first);
     }
 }
+
+Solver::Solver(const Gaddag& dico, const bool s, const bool j)
+    : dico(dico), suzette_check(s), jokers(j) {}
+
+Solver::SearchingParams::SearchingParams(const Node* n, const SpotPos& start,
+                                         const PlayerBag& p, const Direction d):
+    node(n), position(start), startPos(start), availableLetters(p), word(""),
+    plusStatus(PlusStatus::NOT_USED), direction(d), mainScore(0), mainFactor(1),
+    additionnalScore(0), nbUsedLetters(0) {}
 
 void Solver::solveConfig(const ScrabbleConfig& config) {
     cout << "Your Configuration :" << endl
@@ -136,9 +134,9 @@ void Solver::solveFromScratch() {
         config.board.save(file);
         file.close();
 
-        string wait;
-        getline(cin, wait);
-        //usleep(500000);
+        //string wait;
+        //getline(cin, wait);
+        usleep(500000);
         Utils::clearScreen();
         Utils::printHeader();
     }
@@ -200,7 +198,7 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
         movingIndex--;
     }
 
-    orthogonalWord += static_cast<char>(LINK_LETTER);
+    orthogonalWord += static_cast<char>(Gaddag::LINK_LETTER);
     movingIndex = startMovingIndex + 1;
 
     while(Utils::validPos(pos) && !board(pos).isEmpty()) {
@@ -214,7 +212,7 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
         return 0;
     }
 
-    if(dico.searchPrivate(orthogonalWord)) {
+    if(dico.search(orthogonalWord)) {
         return score * factor;
     }
 
@@ -226,7 +224,7 @@ unique_ptr<pair<Solver::StrokesSet, Stroke>>
 
     auto result = make_unique<pair<StrokesSet, Stroke>>();
     auto& [strokesArray, bestStroke] = *result;
-    auto startCellsArray = getStartSpots2(config.board);
+    auto startCellsArray = getStartSpots(config.board);
     stack<SearchingParams> stack;
 
     for(const auto& [ startPos, direction ] : *startCellsArray) {
@@ -284,7 +282,7 @@ void Solver::followPlayerBagRoots(SearchingParams &params,
         else {
             Node* child = params.node->getChildByLetter(letter);
             // l'enfant associé a la lettre existe
-            if(child != Node::NO_NODE) {
+            if(child != nullptr) {
                 unsigned int score = Utils::getLetterPoints(letter)
                     * currentSpot.bonus.letter_factor;
 
@@ -316,7 +314,7 @@ void Solver::followJokerRoots(SearchingParams &params,
     const PlayerBag& currentLetters = params.availableLetters;
 
     for(const Node* child : params.node->getChilds()) {
-        if(child != Node::NO_NODE && child->getLetter() != LINK_LETTER) {
+        if(child != nullptr && child->getLetter() != Gaddag::LINK_LETTER) {
             unsigned char letter2 = child->getLetter();
             auto additionnalScore = checkOtherWords(params, letter2,
                                                     config.board);
@@ -338,13 +336,13 @@ void Solver::followJokerRoots(SearchingParams &params,
 void Solver::followPlusRoot(SearchingParams &params,
                             stack<SearchingParams> &stack) {
 
-    Node* linkChild = params.node->getChildByLetter(LINK_LETTER);
+    Node* linkChild = params.node->getChildByLetter(Gaddag::LINK_LETTER);
     // if PlusRoot exists
-    if(linkChild != Node::NO_NODE) {
+    if(linkChild != nullptr) {
         params.plusStatus = PlusStatus::IN_USE;
         params.node = linkChild;
         params.position = computeNextPos(params);
-        params.word += static_cast<char>(LINK_LETTER);
+        params.word += static_cast<char>(Gaddag::LINK_LETTER);
         params.plusStatus = PlusStatus::USED;
         stack.emplace(params);
     }
@@ -357,7 +355,7 @@ void Solver::followForcedRoot(SearchingParams &params,
     unsigned char forcedLetter = config.board(params.position).letter;
     Node* forcedNode = params.node->getChildByLetter(forcedLetter);
     // if ForcedRoot exists
-    if(forcedNode != Node::NO_NODE) {
+    if(forcedNode != nullptr) {
         params.node = forcedNode;
         params.position = computeNextPos(params);
         params.word += static_cast<char>(forcedLetter);
@@ -367,39 +365,8 @@ void Solver::followForcedRoot(SearchingParams &params,
 }
 
 unique_ptr<Solver::NeighborsSet> Solver::getStartSpots(const Board& board) {
-    unique_ptr set = make_unique<NeighborsSet>();
-
-    if(board.isEmpty()) {
-        set->insert(CENTER_OF_BOARD);
-    }
-    else {
-        for(char line = 0; line < char(Board::SIZE); line++) {
-            for(char col = 0; col < char(Board::SIZE); col++) {
-                Spot current = board({ line, col });
-                if(current.letter != 0) {
-
-                    array<SpotPos, 4> neighborsToTest{{
-                        { char(line - 1), col },
-                        { char(line + 1), col },
-                        { line, char(col + 1) },
-                        { line, char(col - 1) }
-                    }};
-
-                    for(const SpotPos& s : neighborsToTest) {
-                        if(Utils::validPos(s) && board(s).isEmpty()) {
-                            set->insert(s);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return set;
-}
-
-unique_ptr<Solver::NeighborsSet2> Solver::getStartSpots2(const Board& board) {
     using namespace Utils;
-    unique_ptr set = make_unique<NeighborsSet2>();
+    unique_ptr set = make_unique<NeighborsSet>();
 
     if(board.isEmpty()) {
         set->insert({{ CENTER_OF_BOARD, Direction::VERTICAL },
@@ -447,5 +414,6 @@ unique_ptr<Solver::NeighborsSet2> Solver::getStartSpots2(const Board& board) {
             }
         }
     }
+
     return set;
 }

@@ -2,6 +2,7 @@
 #define STROKE_HPP
 
 #include <string>
+
 #include "spotpos.hpp"
 #include "direction.hpp"
 #include "playerbag.hpp"

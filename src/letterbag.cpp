@@ -1,7 +1,6 @@
 
 #include <iostream>
 
-#include "globals.hpp"
 #include "letterbag.hpp"
 #include "utils.hpp"
 
@@ -63,8 +62,13 @@ bool LetterBag::isEmpty() const {
     return nbLetters == 0;
 }
 
-void LetterBag::printBagContent() const {
-    for(const unsigned char letter : bag) {
-        cout << letter << endl;
+const std::vector<unsigned char>& LetterBag::data() const {
+    return bag;
+}
+
+std::ostream& operator<<(std::ostream& out, const LetterBag& lb) {
+    for(const unsigned char letter : lb.data()) {
+        out << letter << endl;
     }
+    return out;
 }

@@ -1,19 +1,12 @@
 #ifndef GADDAG_HPP
 #define GADDAG_HPP
 
-#include <string>
-#include <vector>
-#include <memory>
-#include <optional>
-
 #include "node.hpp"
-
-static constexpr unsigned char HEAD_LETTER = '@';
-static constexpr unsigned char LINK_LETTER = '+';
 
 class Gaddag {
 
     public:
+        // Methods
 
         Gaddag();
 
@@ -29,19 +22,28 @@ class Gaddag {
 
         bool search(const std::string& word) const;
 
-        bool searchPrivate(const std::string& word, Node* start = nullptr) const;
-
         void print() const;
 
+        // Members
+
+        static constexpr unsigned char HEAD_LETTER = '@';
+
+        static constexpr unsigned char LINK_LETTER = '+';
+
     private:
+        // Type definitions
 
         using WordsArray = std::vector<std::string>;
 
         using WordPair = std::pair<Node*, std::string>;
 
+        // Methods
+
         std::unique_ptr<WordsArray> getWordsArray(const std::string& word) const;
 
         Gaddag& addWordPrivate(const std::string& word);
+
+        // Members
 
         Node* head;
 };

@@ -8,20 +8,15 @@ class Node;
 using ChildsArray = std::array<Node*, 27>;
 
 class Node {
-
-    private:
-
-        static unsigned int getChildIndex(const Node* node);
-
     public:
-
-        static constexpr Node* const NO_NODE = nullptr;
 
         Node(const char unsigned letter, const bool final = false);
 
         unsigned char getLetter() const;
 
         const ChildsArray& getChilds() const;
+
+        ChildsArray& getChilds();
 
         Node* getChildByLetter(const unsigned char letter) const;
 
@@ -34,6 +29,8 @@ class Node {
         ~Node();
 
     private:
+
+        static unsigned int getChildIndex(const Node* node);
 
         unsigned char letter;
 

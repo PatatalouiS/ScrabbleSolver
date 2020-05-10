@@ -6,15 +6,9 @@
 
 class PlayerBag {
 
-    private :
-
-        using PlayerLetters = std::vector<unsigned char>;
-
-        PlayerLetters playerLetters;
+    using PlayerLetters = std::vector<unsigned char>;
 
     public:
-
-         static const unsigned int MAX_SIZE = 7;
 
          PlayerBag();
 
@@ -34,7 +28,11 @@ class PlayerBag {
 
          PlayerBag pop(const unsigned char letter) const;
 
-         void print() const;
+         static const unsigned int MAX_SIZE = 7;
+
+    private :
+
+        PlayerLetters playerLetters;
 };
 
 std::ostream& operator << (std::ostream& stream, const PlayerBag& pb);
