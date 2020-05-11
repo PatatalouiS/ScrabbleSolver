@@ -4,29 +4,49 @@
 
 #include "bonus.hpp"
 
-/* A spot on the board to place a letter */
-
+///
+/// \brief The Spot struct represents a Spot on the Scrabble Board.
+///     This struct was given at the beginning of the Project.
+/// \author Mr Nivoliers Vincent
+///
 struct Spot {
-  //default initialization, no letter, no bonus
+    ///
+    /// \brief Spot default constructor, with no bonus, no letter.
+    ///
 	Spot() :
 		letter(0)
 	{}
 
-	//bonus spot initialization
-	// * lf is the bonus letter factor
-	// * wf is the bonus word factor
+    ///
+    /// \brief Spot constructor with take the letter factor and the word factor.
+    /// \param lf the letter factor
+    /// \param wf the word factor
+    ///
 	Spot(unsigned char lf, unsigned char wf) :
 		letter(0), bonus(lf, wf)
 	{}
 
-	//the letter placed on the spot, 0 if none
+    ///
+    /// \brief The letter of the Spot
+    ///
 	unsigned char letter ;
 
-	//the bonus present on the spot
+    ///
+    /// \brief The bonus of the Spot
+    ///
 	Bonus bonus ;
 
+    ///
+    /// \brief Check if the Spot is empty (contains no letter)
+    /// \return true if empty, else false
+    ///
 	bool isEmpty() const;
 } ;
 
-//display of the spot contents
+///
+/// \brief operator << print a Spot on console, for debug
+/// \param out
+/// \param s
+/// \return
+///
 std::ostream& operator<<(std::ostream& out, Spot s);

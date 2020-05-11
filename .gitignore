@@ -1,7 +1,10 @@
 
 obj/
 .DS_Store
-LIFAP6_Projet.pro.user
+ScrabbleSolver.pro.user
 .qmake.stash
 Makefile
-LIFAP6_Projet
+ScrabbleSolver
+data/lastMove.txt
+doc/html
+doc/latex

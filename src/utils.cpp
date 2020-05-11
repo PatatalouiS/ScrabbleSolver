@@ -68,7 +68,7 @@ bool Utils::validPos(const SpotPos &spot) {
 bool Utils::validConfig(const ScrabbleConfig& config, const bool jokers) {
     const auto& [ playerBag, board ] = config;
 
-    if(playerBag.data().size() > PlayerBag::MAX_SIZE) {
+    if(playerBag.size() > PlayerBag::MAX_SIZE) {
         return false;
     }
 
@@ -93,14 +93,14 @@ bool Utils::validConfig(const ScrabbleConfig& config, const bool jokers) {
     return true;
 }
 
-SpotPos Utils::startPosStroke(const Stroke& stroke) {
-    SpotPos start(stroke.pos);
+SpotPos Utils::startPosMove(const Move& Move) {
+    SpotPos start(Move.pos);
 
-    char& movingIndex = stroke.direction == Direction::HORIZONTAL
+    char& movingIndex = Move.direction == Direction::HORIZONTAL
             ?  start.indexCol
             :  start.indexLine;
 
-    movingIndex -= (stroke.word.find(Gaddag::LINK_LETTER) - 1);
+    movingIndex -= (Move.word.find(Gaddag::LINK_LETTER) - 1);
     return start;
 }
 
@@ -122,6 +122,12 @@ void Utils::printOptions(const Utils::Options& opt) {
          << (opt.suzette_check ? "enabled" : "disabled") << endl;
     cout << "Use Jokers : "
          << (opt.jokers ? "enabled" : "disabled") << endl;
+}
+
+void Utils::waitForEnter() {
+    cout << "    ----> Press ENTER Key to see Next Move..." << endl;
+    string wait;
+    getline(cin, wait);
 }
 
 Utils::Options Utils::parseArgs(int argc, char ** argv) {
@@ -165,4 +171,25 @@ Utils::Options Utils::parseArgs(int argc, char ** argv) {
     }
 
     return options;
+}
+
+string Utils::urlencode(const std::string& str) {
+    static const char lookup[]= "0123456789abcdef";
+    std::stringstream e;
+    for(unsigned long i = 0, ix = str.length(); i < ix; i++) {
+        const char& c = str[i];
+        if ( (48 <= c && c <= 57) ||
+             (65 <= c && c <= 90) ||
+             (97 <= c && c <= 122) ||
+             (c=='-' || c=='_' || c=='.' || c=='~')
+        ){
+            e << c;
+        }
+        else{
+            e << '%';
+            e << lookup[ (c&0xF0)>>4 ];
+            e << lookup[ (c&0x0F) ];
+        }
+    }
+    return e.str();
 }

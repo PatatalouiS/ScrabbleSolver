@@ -46,15 +46,18 @@ Node* Gaddag::getHead() {
 unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
     unique_ptr<WordsArray> array = make_unique<WordsArray>();
 
+    //Just a copy of the word
     string normalString(word);
     auto normalStringIt = normalString.begin() + 1;
     auto normalEnd = normalString.end();
 
+    //The word, but reversed
     string reverseString(word);
     reverse(reverseString.begin(), reverseString.end());
     auto reverseStringIt = reverseString.end() - 1;
     auto reverseEnd = reverseString.end();
 
+    //Until we haven't covered all the word
     while(reverseStringIt >= reverseString.begin()) {
         string reversePart = reverseString;
         reversePart.assign(reverseStringIt, reverseEnd);
@@ -62,10 +65,11 @@ unique_ptr<WordsArray> Gaddag::getWordsArray(const string& word) const {
         string normalPart = normalString;
         normalPart.assign(normalStringIt, normalEnd);
 
+        //push in array (reversepart)+(normal part)
         array->push_back(reversePart
                             .append(1,LINK_LETTER)
                             .append(normalPart));
-
+        //Move the iterators
         reverseStringIt--;
         normalStringIt++;
     }
@@ -83,6 +87,7 @@ Gaddag& Gaddag::addWordPrivate(const string& word) {
         unsigned char letterToInsert = static_cast<unsigned char>(*wordIterator);
         Node* nextNode = current->getChildByLetter(letterToInsert);
 
+        // if nextNode not exists, create it
         if(nextNode == nullptr) {
             Node* newNode = new Node(letterToInsert);
             current->addChild(newNode);
@@ -91,7 +96,7 @@ Gaddag& Gaddag::addWordPrivate(const string& word) {
         else {
             current = nextNode;
         }
-
+        // if there is no more letters to insert, set the node to final
         if(wordIterator == lastLetter) {
             current->setFinal();
             inserted = true;
@@ -104,12 +109,14 @@ Gaddag& Gaddag::addWordPrivate(const string& word) {
 }
 
 Gaddag& Gaddag::addWord(const std::string &word) {
+    //empty string case
     if(word == "") {
         return *this;
     }
 
     unique_ptr<WordsArray> wordsToInsert = getWordsArray(word);
 
+    // add all the gaddagged representation of the word to Gaddag
     for(const string& w : *wordsToInsert) {
         addWordPrivate(w);
     }
@@ -126,12 +133,14 @@ bool Gaddag::search(const string& word) const {
         unsigned char letterToSearch = static_cast<unsigned char>(*wordIterator);
         Node* nextNode = current->getChildByLetter(letterToSearch);
 
+        // if node not exists, search fails
         if(nextNode == nullptr) {
             return false;
         }
 
         current = nextNode;
 
+        // if there is no more letter tos test, return the state of the current Node
         if(wordIterator == lastLetter) {
             return current->isFinal();
         }
@@ -139,33 +148,14 @@ bool Gaddag::search(const string& word) const {
     }
 }
 
+Gaddag::~Gaddag() {
+    delete head;
+}
 
-//bool Gaddag::search(const std::string &word) const {
-//    if(word.length() <= 1) {
-//        return false;
-//    }
+std::ostream& operator<<(std::ostream& out, const Gaddag& g) {
+    using WordPair = std::pair<const Node*, std::string>;
 
-//    Node* current = head;
-//    const unsigned char firstLetter = static_cast<unsigned char>(word[0]);
-//    Node* nextNode;
-
-//    nextNode = current->getChildByLetter(firstLetter);
-//    if(nextNode == Node::NO_NODE) {
-//        return false;
-//    }
-
-//    current = nextNode;
-
-//    nextNode = current->getChildByLetter(LINK_LETTER);
-//    if(nextNode == Node::NO_NODE) {
-//        return false;
-//    }
-
-//    return searchPrivate(word.substr(1, word.length() - 1),  nextNode);
-//}
-
-void Gaddag::print() const {
-    stack<WordPair> stack({ make_pair(head, "") });
+    stack<WordPair> stack({{ g.getHead(), "" }});
     WordPair current;
 
     while(!stack.empty()) {
@@ -173,7 +163,7 @@ void Gaddag::print() const {
         stack.pop();
 
         if(currentNode->isFinal()) {
-            cout << currentWord << endl;
+            out << currentWord << endl;
         }
 
         for(Node* node : currentNode->getChilds()) {
@@ -184,8 +174,5 @@ void Gaddag::print() const {
             }
         }
     }
-}
-
-Gaddag::~Gaddag() {
-    delete head;
+    return out;
 }

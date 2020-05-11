@@ -167,10 +167,10 @@ Board& Board::putWord(const SpotPos &pos, const std::string &w, const Direction 
 		return *this;
 }
 
-Board& Board::putStroke(const Stroke &stroke) {
-		string regularWord = Utils::toRegularWord(stroke.word);
-		SpotPos firstPos = Utils::startPosStroke(stroke);
-		putWord(firstPos, regularWord, stroke.direction);
+Board& Board::putMove(const Move &Move) {
+		string regularWord = Utils::toRegularWord(Move.word);
+		SpotPos firstPos = Utils::startPosMove(Move);
+		putWord(firstPos, regularWord, Move.direction);
 		return *this;
 }
 

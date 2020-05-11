@@ -28,8 +28,8 @@ Node* Node::getChildByLetter(const unsigned char letter) const {
     return childs[Utils::charToIndex(letter)];
 }
 
-unsigned int Node::getChildIndex(const Node* letter) {
-    return Utils::charToIndex(letter->getLetter());
+unsigned int Node::getChildIndex(const Node* childNode) {
+    return Utils::charToIndex(childNode->getLetter());
 }
 
 void Node::addChild(Node* newNode) {

@@ -14,12 +14,14 @@ ostream& operator<<(ostream& out, const SpotPos& sp) {
 }
 
 size_t hash<SpotPos>::operator()(const SpotPos& pos) const {
+    //Use XOR and bit shifting for good hashes
     auto hash = std::hash<char>();
     return hash(pos.indexLine) ^ (hash(pos.indexCol) << 1);
 }
 
 size_t hash<pair<SpotPos, Direction>>::operator()(const pair<SpotPos,
                                                   Direction>& p) const {
+    //Use XOR and bit shifting for good hashes
     return hash<SpotPos>()(p.first)
            ^ (hash<Direction>()(p.second) << 1);
 }

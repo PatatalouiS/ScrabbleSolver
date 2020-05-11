@@ -1,6 +1,7 @@
 #include "playerbag.hpp"
 #include <iostream>
 #include <algorithm>
+#include <cassert>
 
 using namespace std;
 
@@ -13,18 +14,21 @@ PlayerBag::PlayerBag(LetterBag& mainLetterBag) {
     }
 }
 
-PlayerBag::PlayerBag(const PlayerLetters& letters) : playerLetters(letters) {}
+PlayerBag::PlayerBag(const PlayerLetters& letters) : playerLetters(letters) {
+    assert(letters.size() <= MAX_SIZE);
+}
 
-PlayerBag::PlayerBag(const PlayerBag& bag) : playerLetters(bag.data()) {}
+PlayerBag::PlayerBag(const PlayerBag& bag) : playerLetters(bag.data()) {
+    assert(bag.size() <= MAX_SIZE);
+}
 
 PlayerBag PlayerBag::pop(const unsigned char letter) const {
+    assert((letter >= 'A' && letter <= 'Z') || (letter == JOKER_SYMBOL));
     PlayerLetters copy(playerLetters);
 
     auto iterator = find(copy.begin(), copy.end(), letter);
-
-    if(iterator != playerLetters.end()) {
-        copy.erase(iterator);
-    }
+    assert(iterator != playerLetters.end());
+    copy.erase(iterator);
 
     return PlayerBag(copy);
 }
@@ -39,6 +43,10 @@ PlayerBag::PlayerLetters& PlayerBag::data() {
 
 bool PlayerBag::isEmpty() const {
     return playerLetters.empty();
+}
+
+unsigned long PlayerBag::size() const {
+    return playerLetters.size();
 }
 
 PlayerBag& PlayerBag::fillWith(LetterBag& mainLetterBag) {
