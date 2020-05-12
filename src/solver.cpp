@@ -3,8 +3,6 @@
 #include <fstream>
 #include <unistd.h>
 #include <cassert>
-#include <future>
-#include <thread>
 
 #include "utils.hpp"
 #include "suzettecheck.hpp"
@@ -103,7 +101,7 @@ void Solver::solveConfig(const ScrabbleConfig& config) {
     if(suzette_check) {
         unsigned int suzetteScore = suzette.get();
         cout << "--- SUZETTE ---" << endl
-             << "Score By Suzette : " << suzetteScore << " pts." << endl;
+             << "Score By Suzette : " << suzetteScore << " pts.";
     }
 }
 
@@ -118,16 +116,6 @@ void Solver::solveFromScratch() {
 
     // loop while there is no moreletters to play
     while(!mainBag.isEmpty() || !config.playerBag.isEmpty()) {
-        future<unsigned int> suzette;
-        // If suzette_check enabled, send a query to get the Suzette Move
-        if(suzette_check) {
-            suzette = async([&config] () -> unsigned int {
-               auto [ score, board ] = Suzette::check(config.board,
-                                                        config.playerBag);
-               return score;
-            });
-        }
-
         auto [ availableMoves, bestMove ] = *getAvailableMoves(config);
 
         // no Moves find --> end (very rare)
@@ -137,8 +125,9 @@ void Solver::solveFromScratch() {
 
         totalScore += bestMove.score;
 
-        // copy of the lastPlayerBag(we want too print it)
+        // copy of before to change(we want too print it)
         PlayerBag lastPlayerBag(config.playerBag);
+        Board lastBoard(config.board);
 
         // Fill the new PlayerBag returned with the main LetterBag
         config.playerBag = PlayerBag(bestMove.playerBag.fillWith(mainBag));
@@ -154,16 +143,21 @@ void Solver::solveFromScratch() {
              << "Moves found : " << availableMoves.size() << endl
              << "New PlayerBag : " << config.playerBag << endl;
 
-        // If suzette_check enabled, print the score by Suzette
+        // If suzette_check enabled, fetch and print the score by Suzette
         if(suzette_check) {
-            unsigned int suzetteScore = suzette.get();
-            assert(suzetteScore == bestMove.score);
+            auto [ suzetteScore, board ] = Suzette::check(lastBoard,
+                                                       lastPlayerBag);
             cout << "--- SUZETTE ---" << endl
                  << "Score By Suzette : " << suzetteScore << " pts.";
+                 assert(suzetteScore == bestMove.score);
         }
 
+        ofstream file ("./data/laststroke.txt");
+        config.board.save(file);
+        file.close();
+        usleep(100000);
         //clear console, wait.
-        Utils::waitForEnter();
+        //Utils::waitForEnter();
         Utils::clearScreen();
         Utils::printHeader();
     }

@@ -1,6 +1,6 @@
 
 GCC       = g++
-FLAGS     = -Wall -Wextra -std=c++17 -O3
+FLAGS     = -Wall -std=c++17 -O3
 LIBS      = 
 MAIN_RULE = ScrabbleSolver
 
