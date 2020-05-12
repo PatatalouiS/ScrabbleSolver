@@ -1,11 +1,14 @@
-<img src='https://portraitsdefemmes.files.wordpress.com/2012/10/logo-ucbl.jpg?w=755' width='300'></img> 
-
+<img src='https://portraitsdefemmes.files.wordpress.com/2012/10/logo-ucbl.jpg?w=755' width='300'/> 
 <h1> Introduction </h1>
 
-<p>This project is an automatic Scrabble solver. It was realized for the LIFAP6 UE at UCBL1. </br>
+<p>This project is an automatic Scrabble solver. It was realized for the LIFAP6 UE at UCBL1.<br>
 To get the base project and all the statements follow <a href="https://forge.univ-lyon1.fr/lifap6/scrabble-etu">THIS LINK</a><p>
 
 <h4>⚠️ Please read entirely the Instructions for build the project and be aware of all the available options ️⚠️ </h4>
+
+<h1> Documentation </h1>
+
+All the full documentation of the code is available with the <em> Doxygen </em> tool. yo can access to this documentation by the file <code><b> doc/html/index.html </b></code>
 
 <h1> Build </h1>
 
@@ -42,6 +45,8 @@ As explained, you must pass the Firewall of UCBL1 to keep the Suzette asserts wo
 script <code>suzetteconnect.sh</code> on another console window. After, you can use --suzette-check as you want. run this script from the root ofthe project with :
 <pre>$ sh suzetteconnect.sh</pre>
 
+This script is going to ask you a password for authenticate you at UCBL. This password will be send to you via @-Mail.
+
 <h4>⚠️ Warning</h4> The <code>--jokers</code> option and the <code>--suzette-check</code> option are not compatible together. Indeed, The Suzette Server can't play with jokers actually. You will be prompt by the software if you put these two options together. 
 
 <h2>Run</h2>
@@ -73,7 +78,7 @@ The config file <code>data/config_board.txt</code> must respect the following co
 ...............
 ...............
 AEBDECZ
-</pre></code>
+</code></pre>
 
 <h1>Third Party Libraries</h1>
 
@@ -84,6 +89,6 @@ to send Queries to the Suzette server with an hhtp client and <a href="https://g
 
 <ul>
     <li> CERBULEAN Ana-Maria P1710179 </li>
-    <li> OLIVIE Maxime P1712754 </li
+    <li> OLIVIE Maxime P1712754 </li>
 </ul>
 <br>

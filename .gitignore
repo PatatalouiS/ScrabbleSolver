@@ -8,3 +8,4 @@ data/lastMove.txt
 doc/html
 doc/latex
 MakefileQt
+test_board*

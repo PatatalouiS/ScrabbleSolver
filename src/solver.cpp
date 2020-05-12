@@ -70,21 +70,10 @@ Solver::SearchingParams::SearchingParams(const Node* n, const SpotPos& start,
     additionnalScore(0), nbUsedLetters(0) {}
 
 void Solver::solveConfig(const ScrabbleConfig& config) {
-    future<unsigned int> suzette;
-
     cout << "Your Board :" << endl
          <<  config.board << endl;
 
     auto [ availableMoves, bestMove ] = *getAvailableMoves(config);
-
-    // If suzette_check enabled, send a query to get the Suzette Move
-    if(suzette_check) {
-        suzette = async([&config] () -> unsigned int {
-           auto [ score, board ] = Suzette::check(config.board,
-                                                    config.playerBag);
-           return score;
-        });
-    }
 
     if(bestMove.score == 0) {
         cout << "No Move are possible with this configuration !" << endl;
@@ -99,9 +88,11 @@ void Solver::solveConfig(const ScrabbleConfig& config) {
 
     // If suzette_check enabled, print the score by Suzette
     if(suzette_check) {
-        unsigned int suzetteScore = suzette.get();
+        auto [ suzetteScore, board ] = Suzette::check(config.board,
+                                                   config.playerBag);
         cout << "--- SUZETTE ---" << endl
              << "Score By Suzette : " << suzetteScore << " pts.";
+             assert(suzetteScore == bestMove.score);
     }
 }
 
