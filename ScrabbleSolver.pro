@@ -6,6 +6,7 @@ TEMPLATE = app
 CONFIG += c++17
 CONFIG -= app_bundle
 CONFIG -= qt
+MAKEFILE = MakefileQt
 
 OBJECTS_DIR= obj/
 

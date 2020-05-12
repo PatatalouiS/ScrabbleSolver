@@ -6,7 +6,6 @@
 // Constants, PATHS
 const std::string DICO_PATH = "./data/dico.txt";
 const std::string CONFIG_BOARD = "./data/config_board.txt";
-const std::string CONFIG_START = "./data/start_board.txt";
 
 using namespace std;
 using namespace Utils;

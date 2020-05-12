@@ -131,7 +131,7 @@ void Utils::validOptions(const Utils::Options& opt) {
              << "     will be wrong. /!\\" << endl << endl;
     }
 
-    cout << "--> Press ENTER Key to Construct Gaddagg and run Solver..." << endl;
+    cout << "--> Press ENTER Key to construct Gaddag and run Solver..." << endl;
 
     string temp;
     getline(cin, temp);

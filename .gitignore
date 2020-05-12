@@ -3,8 +3,8 @@ obj/
 .DS_Store
 ScrabbleSolver.pro.user
 .qmake.stash
-Makefile
 ScrabbleSolver
 data/lastMove.txt
 doc/html
 doc/latex
+MakefileQt

@@ -162,12 +162,7 @@ void Solver::solveFromScratch() {
                  << "Score By Suzette : " << suzetteScore << " pts.";
         }
 
-//        ofstream file("./data/lastMove.txt");
-//        config.board.save(file);
-//        file.close();
-
-        //usleep(500000);
-//        //clear console, wait.
+        //clear console, wait.
         Utils::waitForEnter();
         Utils::clearScreen();
         Utils::printHeader();
