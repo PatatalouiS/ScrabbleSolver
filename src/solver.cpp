@@ -3,6 +3,8 @@
 #include <fstream>
 #include <unistd.h>
 #include <cassert>
+#include <future>
+#include <thread>
 
 #include "utils.hpp"
 #include "suzettecheck.hpp"
@@ -50,8 +52,6 @@ namespace {
             totalScore += SCRABBLE_BONUS;
         }
 
-        string regular = Utils::toRegularWord(params.word);
-
         Move toAdd({ params.word,
                         params.startPos,
                         params.direction,
@@ -72,60 +72,78 @@ Solver::SearchingParams::SearchingParams(const Node* n, const SpotPos& start,
     additionnalScore(0), nbUsedLetters(0) {}
 
 void Solver::solveConfig(const ScrabbleConfig& config) {
-    cout << "Your Configuration :" << endl
+    future<unsigned int> suzette;
+
+    cout << "Your Board :" << endl
          <<  config.board << endl;
 
-    auto availableMoves = *getAvailableMoves(config);
-    Move bestMove = availableMoves.second;
+    auto [ availableMoves, bestMove ] = *getAvailableMoves(config);
+
+    // If suzette_check enabled, send a query to get the Suzette Move
+    if(suzette_check) {
+        suzette = async([&config] () -> unsigned int {
+           auto [ score, board ] = Suzette::check(config.board,
+                                                    config.playerBag);
+           return score;
+        });
+    }
+
+    if(bestMove.score == 0) {
+        cout << "No Move are possible with this configuration !" << endl;
+        return;
+    }
 
     cout << Board(config.board).putMove(bestMove);
     cout << "--- BEST Move ---" << endl
          << "With letters : " << config.playerBag << endl
          << "We can play Word  : " << Utils::toRegularWord(bestMove.word)
          << endl << "With a score of : " << bestMove.score << " pts." << endl;
-    // If suzette_check enabled, show the score by Suzette !
+
+    // If suzette_check enabled, print the score by Suzette
     if(suzette_check) {
-        auto [ score, board ] = Suzette::check(config.board, config.playerBag);
+        unsigned int suzetteScore = suzette.get();
         cout << "--- SUZETTE ---" << endl
-             << "Score By Suzette : " << score << " pts." << endl;
+             << "Score By Suzette : " << suzetteScore << " pts." << endl;
     }
 }
 
 void Solver::solveFromScratch() {
     LetterBag mainBag(jokers);
     unsigned int totalScore = 0;
-    unsigned int suzetteScore = 0;
 
     ScrabbleConfig config {
         PlayerBag(mainBag),
         Board()
     };
+
     // loop while there is no moreletters to play
     while(!mainBag.isEmpty() || !config.playerBag.isEmpty()) {
-        auto availableMoves = *getAvailableMoves(config);
-        Move bestMove = availableMoves.second;
-        unsigned int suzetteScore = 0;
-        // no Moves find (very rare)
+        future<unsigned int> suzette;
+        // If suzette_check enabled, send a query to get the Suzette Move
+        if(suzette_check) {
+            suzette = async([&config] () -> unsigned int {
+               auto [ score, board ] = Suzette::check(config.board,
+                                                        config.playerBag);
+               return score;
+            });
+        }
+
+        auto [ availableMoves, bestMove ] = *getAvailableMoves(config);
+
+        // no Moves find --> end (very rare)
         if(bestMove.score == 0) {
             break;
         }
-        // If suzette_check enabled, show the score by Suzette !
-        if(suzette_check) {
-            auto [ score, board ] = Suzette::check(config.board, config.playerBag);
-            assert(bestMove.score == score);
-            suzetteScore = score;
-        }
 
-        // Increment total score
         totalScore += bestMove.score;
+
         // copy of the lastPlayerBag(we want too print it)
         PlayerBag lastPlayerBag(config.playerBag);
+
         // Fill the new PlayerBag returned with the main LetterBag
         config.playerBag = PlayerBag(bestMove.playerBag.fillWith(mainBag));
-        // Place move on the board
-        config.board.putMove(bestMove);
 
-        cout << config.board
+        cout << config.board.putMove(bestMove)
              << "--- BEST Move ---" << endl
              << "With letters : " << lastPlayerBag << endl
              << "We can play Word  : " << Utils::toRegularWord(bestMove.word)
@@ -133,37 +151,39 @@ void Solver::solveFromScratch() {
              << "With a score of : " << bestMove.score << " pts." << endl
              << "Total Score " << totalScore << endl
              << "Letters remaining : " << mainBag.getNbLetters() << endl
-             << "Moves founded : " << availableMoves.first.size() << endl
+             << "Moves found : " << availableMoves.size() << endl
              << "New PlayerBag : " << config.playerBag << endl;
-        // If suzette_check enabled, show the score by Suzette !
+
+        // If suzette_check enabled, print the score by Suzette
         if(suzette_check) {
+            unsigned int suzetteScore = suzette.get();
+            assert(suzetteScore == bestMove.score);
             cout << "--- SUZETTE ---" << endl
                  << "Score By Suzette : " << suzetteScore << " pts.";
         }
 
-        ofstream file("./data/lastMove.txt");
-        config.board.save(file);
-        file.close();
+//        ofstream file("./data/lastMove.txt");
+//        config.board.save(file);
+//        file.close();
+
         //usleep(500000);
-         //clear console, wait..
+//        //clear console, wait.
         Utils::waitForEnter();
         Utils::clearScreen();
         Utils::printHeader();
     }
 
     cout << endl << "There is no more Move to play ! "
-         << "End of the series" << endl;
+         << "End of the sequence" << endl;
 }
 
 SpotPos Solver::computeNextPos(const SearchingParams& params) {
     PlusStatus plusStatus = params.plusStatus;
-
-    // If we use Plus, we need to compute start Position
+    // If we use Plus, we need to compute the new position in relation to start Position
     // else we need to compute with current position
     const SpotPos& spotUsed = plusStatus == PlusStatus::IN_USE
             ? params.startPos
             : params.position;
-
     // If plusStatus is not used, we are going to decrement an index(minus Functor)
     // else we need to increment (plus Functor)
     auto op = plusStatus == PlusStatus::NOT_USED
@@ -198,19 +218,21 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
             * board(params.position).bonus.letter_factor;
     unsigned int factor = board(params.position).bonus.word_factor;
 
+    // init the orthogonal word with the currentLetter we want to play
     string orthogonalWord({ static_cast<char>(candidate) });
 
     // if HORIZONTAL, we move the indexLine, else indexCol
+    // So, handle a reference to this index
     char& movingIndex = direction == Direction::HORIZONTAL
             ? pos.indexLine
             : pos.indexCol;
 
     // copy of the moving index before we change it,
-    // useful when we have to search the second part of an orthogonal word
+    // useful when we have to search the second part of an orthogonal word(after '+)
     char startMovingIndex = movingIndex;
     movingIndex--;
 
-    // search the first part( Reverse part) of the orthogonal Word
+    // search the first part( Reverse part) of the orthogonal Word, move backward
     while(Utils::validPos(pos) && !board(pos).isEmpty()) {
         unsigned char nextLetter = board(pos).letter;
         orthogonalWord += static_cast<char>(nextLetter);
@@ -222,6 +244,7 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     movingIndex = startMovingIndex + 1;
 
     // search the second part( Normal part) of the orthogonal Word
+    // move frontWard
     while(Utils::validPos(pos) && !board(pos).isEmpty()) {
         unsigned char nextLetter = board(pos).letter;
         orthogonalWord += static_cast<char>(nextLetter);
@@ -230,7 +253,8 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     }
     // If orthogonalWord is <= 2, The computed word is just the current letter
     // followed by '+' Symbol,
-    // CONCLUSION -> There is no orthogonal Word here ! return 0
+    // CONCLUSION -> There is no orthogonal Word here !
+    // So return 0, no additionnal score to add
     if(orthogonalWord.size() <= 2) {
         return 0;
     }
@@ -238,18 +262,21 @@ optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
     if(dico.search(orthogonalWord)) {
         return score * factor;
     }
-    //else return none
+    //else return none (wrong orthogonal word)
     return nullopt;
 }
 
 unique_ptr<pair<Solver::MovesSet, Move>>
-        Solver::getAvailableMoves(const ScrabbleConfig& config) {
+    Solver::getAvailableMoves(const ScrabbleConfig& config) {
+
     // The result
     auto result = make_unique<pair<MovesSet, Move>>();
+
     // get references to result pair
     auto& [MovesArray, bestMove] = *result;
     auto startCellsArray = getStartSpots(config.board);
     stack<SearchingParams> stack;
+
     // For all the computed StartCells
     for(const auto& [ startPos, direction ] : *startCellsArray) {
         stack.push({ dico.getHead(), startPos, config.playerBag, direction });
@@ -261,14 +288,17 @@ unique_ptr<pair<Solver::MovesSet, Move>>
 
             if(Utils::validPos(currentParams.position)) {
                 Spot currentSpot = config.board(currentParams.position);
+
                 // there is no letter in the board at currentSpot
                 if(currentSpot.isEmpty()) {
+
                     //If a vaid Move exists, add it ! (and set the bestMove)
                     if(validMoveCandidate(currentParams)) {
                         bestMove = max(bestMove, addMove(MovesArray,
                                                                currentParams));
                     }
                     followPlayerBagRoots(currentParams, stack, config);
+
                     // Use the Plus root if it's not already used
                     if(currentParams.plusStatus == PlusStatus::NOT_USED) {
                         followPlusRoot(currentParams, stack);
@@ -392,43 +422,47 @@ void Solver::followForcedRoot(SearchingParams &params,
 unique_ptr<Solver::StartPosSet> Solver::getStartSpots(const Board& board) {
     using namespace Utils;
     unique_ptr set = make_unique<StartPosSet>();
-    // Empty Board == Search only in the Center Spot
+    // Empty Board == Search only in the Center Spot in the two directions
     if(board.isEmpty()) {
         set->insert({{ CENTER_OF_BOARD, Direction::VERTICAL },
                      { CENTER_OF_BOARD, Direction::HORIZONTAL }});
     }
     else {
-        static const array dArray = { Direction::VERTICAL,
-                                      Direction::HORIZONTAL };
+        static const array directionArray = { Direction::VERTICAL,
+                                              Direction::HORIZONTAL };
         // for the two directions
-        for(const Direction d : dArray) {
+        for(const Direction direction : directionArray) {
+
             // Visit all the Spots
             for(unsigned char line = 0; line < Board::SIZE; line++) {
                 for(unsigned char col = 0; col < Board::SIZE; col++) {
                     SpotPos pos { char(line), char(col) };
+
                     // if spot is empty
                     if(board(pos).isEmpty()) {
                         // if VERTICAL, the movingIndex is the columns, else lines
-                        char& movingIndex = d == Direction::VERTICAL
+                        char& movingIndex = direction == Direction::VERTICAL
                                 ? pos.indexCol
                                 : pos.indexLine;
 
                         movingIndex++;
-                        // One of the orthogonal neighbor
+                        // the fisrt orthogonal neighbor
                         SpotPos neighbor1(pos);
                         movingIndex -= 2;
-                        // teh second othogonal neighbor
+                        // the second orthogonal neighbor
                         SpotPos neighbor2(pos);
                         movingIndex++;
-                        // if one of teh two Neighbors is not empty, add the current pos !
+
+                        // if one of the two Neighbors is not empty, add the current pos
+                        // to the Set of positions
                         if((validPos(neighbor1) && !board(neighbor1).isEmpty()) ||
                            (validPos(neighbor2) && !board(neighbor2).isEmpty())) {
-                            set->insert({ pos, d });
+                            set->insert({ pos, direction });
                         }
                     }
                     else {
                         // if VERTICAL, the Moving index is the lines, else columns
-                        char& movinIndex = d == Direction::VERTICAL
+                        char& movinIndex = direction == Direction::VERTICAL
                                 ? pos.indexLine
                                 : pos.indexCol;
 
@@ -438,13 +472,12 @@ unique_ptr<Solver::StartPosSet> Solver::getStartSpots(const Board& board) {
                         movinIndex--;
                         // If the Neighbor is Empty, add the current pos !
                         if(!validPos(neighbor) || board(neighbor).isEmpty()) {
-                            set->insert({ pos, d });
+                            set->insert({ pos, direction });
                         }
                     }
                 }
             }
         }
     }
-
     return set;
 }

@@ -118,7 +118,7 @@ namespace Utils {
     /// \brief Print the Options used ( --loop, --jokers --suzette-check)
     /// \param opt the Options to print
     ///
-    void printOptions(const Options& opt);
+    void validOptions(const Options& opt);
 
     ///
     /// \brief Wait ENTER key from the User

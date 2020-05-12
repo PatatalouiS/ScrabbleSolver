@@ -42,7 +42,6 @@ unsigned char LetterBag::pickRandomLetter() {
         cerr << error << endl;
         exit(EXIT_FAILURE);
     }
-
     // Ensure good random letter and O(1) complexity
     uniform_int_distribution<unsigned int> distrib(0, nbLetters-1);
     const unsigned int random = distrib(generator);

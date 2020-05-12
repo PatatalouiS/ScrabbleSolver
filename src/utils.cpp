@@ -81,8 +81,8 @@ bool Utils::validConfig(const ScrabbleConfig& config, const bool jokers) {
     }
 
     if(!jokers && (nbJokers != 0)) {
-        cerr << "/!\\ Jokers detected but Joker Mode is disabled "
-             << "Please run with --jokers flag if you want to use jokers ! "
+        cerr << "/!\\ Jokers detected but Joker Mode is disabled" << endl
+             << "     Please run with --jokers flag if you want to use jokers ! "
              << "Abort... /!\\" << endl;
         return false;
     }
@@ -109,19 +109,34 @@ void Utils::clearScreen() {
 }
 
 void Utils::printHeader() {
-    cout << endl << "---------- SCRABBLE SOLVER V1.0 ----------" << endl
+    cout << "---------- SCRABBLE SOLVER V1.0 ----------" << endl
          << " By CERBULEAN Ana-Maria and OLIVIE Maxime" << endl << endl;
 }
 
-void Utils::printOptions(const Utils::Options& opt) {
+void Utils::validOptions(const Utils::Options& opt) {
+    const auto [ loop, jokers, suzette_check ] = opt;
     clearScreen();
     printHeader();
+
     cout << "Loop Mode : "
-         << (opt.loop ? "enabled" : "disabled") << endl;
-    cout << "Suzette Check : "
-         << (opt.suzette_check ? "enabled" : "disabled") << endl;
-    cout << "Use Jokers : "
-         << (opt.jokers ? "enabled" : "disabled") << endl;
+         << (loop ? "enabled" : "disabled") << endl
+         << "Use Jokers : "
+         << (jokers ? "enabled" : "disabled") << endl
+         << "Suzette Check : "
+         << (suzette_check ? "enabled" : "disabled") << endl << endl;
+
+    if(jokers && suzette_check) {
+        cout << "/!\\ Warning : Suzette isn't able to play with jokers" << endl
+             << "     but --jokers option is enabled. The score by Suzette" << endl
+             << "     will be wrong. /!\\" << endl << endl;
+    }
+
+    cout << "--> Press ENTER Key to Construct Gaddagg and run Solver..." << endl;
+
+    string temp;
+    getline(cin, temp);
+    clearScreen();
+    printHeader();
 }
 
 void Utils::waitForEnter() {

@@ -7,19 +7,22 @@
 
 ///
 /// \brief The SpotPos struct is a little struct to represent the coordinates
-///     of a Spot in the Board. To use with bracket initialisation.
+///     of a Spot in the Board. It's not an essential Class because we can
+///     work with the Scrabble Board with only one index because the Spots array is linear,
+///     But sometimes it's more comfortable to think with two dimensions.
+///     To use with bracket initialisation.
 /// \author CERBULEAN Ana-Maria, OLIVIE Maxime
 ///
 struct SpotPos {
     ///
     /// \brief line index
     ///
-    char indexLine;
+    char indexLine = 0;
 
     ///
     /// \brief col index
     ///
-    char indexCol;
+    char indexCol = 0;
 
     ///
     /// \brief operator == Return if two Spot instances are equals.

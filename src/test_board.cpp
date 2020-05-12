@@ -14,7 +14,7 @@ using namespace Utils;
 int main(int argc, char** argv) {
     // parse command line args
     Options options = parseArgs(argc, argv);
-    printOptions(options);
+    validOptions(options);
     // Create stuff for solve
     Gaddag gaddag(DICO_PATH);
     Solver solver(gaddag, options.suzette_check, options.jokers);
