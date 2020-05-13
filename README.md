@@ -52,7 +52,7 @@ As explained, you must pass the Firewall of UCBL1 to keep the Suzette asserts wo
 script <code><b>suzetteconnect.sh</b></code>, <b>( and don't forget to pass tour UCLB1 login at first arg )</b> on another console window. After, you can use <code><b>--suzette-check</b></code> as you want. run this script from the root of the project with the command:<br>
 <pre>$ sh suzetteconnect.sh [p1234567]  <i>//Your UCBL1 login</i></pre> 
 
-This script is going to ask you a password for authenticate you at UCBL. The password to enter is your UCBL1 password.
+This script is going to ask you a password for authenticate you at UCBL. The password to enter is your UCBL1 password. <b>The script will not return</b>, it's normal ! kill the process once you no longer need the option <code><b>--suzette-check</b></code>
 
 <h4>⚠️ Warning</h4> The <code><b>--jokers</b></code> option and the <code><b>--suzette-check</b></code> option are not compatible together. Indeed, The Suzette Server can't play with jokers actually. You will be prompt by the software if you put these two options together. 
 
