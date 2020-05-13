@@ -28,6 +28,9 @@ $(OBJ)%$(O_X) : $(SRC)%$(C_X) $(SRC)%.$(H_X)
 $(OBJ)%$(O_X) : $(SRC)%$(C_X)
 	$(GCC) $(FLAGS) -c $< -o $@
 
+doc :
+	doxygen doc/doxyfile.doxy
+
 makedir :
 	@mkdir -p $(OBJ) $(BIN)
 
