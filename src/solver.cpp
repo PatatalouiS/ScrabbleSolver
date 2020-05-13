@@ -1,6 +1,5 @@
 ﻿
 #include <sstream>
-#include <fstream>
 #include <unistd.h>
 #include <cassert>
 
@@ -92,7 +91,6 @@ void Solver::solveConfig(const ScrabbleConfig& config) {
                                                    config.playerBag);
         cout << "--- SUZETTE ---" << endl
              << "Score By Suzette : " << suzetteScore << " pts.";
-             assert(suzetteScore == bestMove.score);
     }
 }
 
@@ -140,15 +138,10 @@ void Solver::solveFromScratch() {
                                                        lastPlayerBag);
             cout << "--- SUZETTE ---" << endl
                  << "Score By Suzette : " << suzetteScore << " pts.";
-                 assert(suzetteScore == bestMove.score);
         }
 
-        ofstream file ("./data/laststroke.txt");
-        config.board.save(file);
-        file.close();
-        usleep(100000);
         //clear console, wait.
-        //Utils::waitForEnter();
+        Utils::waitForEnter();
         Utils::clearScreen();
         Utils::printHeader();
     }
@@ -189,12 +182,14 @@ SpotPos Solver::computeNextPos(const SearchingParams& params) {
 
 optional<unsigned int> Solver::checkOtherWords(const SearchingParams &params,
                                                const unsigned char candidate,
-                                               const Board& board) {
+                                               const Board& board,
+                                               const bool jokerUsed) {
     SpotPos pos = params.position;
     Direction direction = params.direction;
 
     // get the score of the SpotPos to check
-    unsigned int score = Utils::getLetterPoints(candidate)
+    // if the candidate is played as a joker, 0 pts.
+    unsigned int score = Utils::getLetterPoints(jokerUsed ? JOKER_SYMBOL : candidate)
             * board(params.position).bonus.letter_factor;
     unsigned int factor = board(params.position).bonus.word_factor;
 

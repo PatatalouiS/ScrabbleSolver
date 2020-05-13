@@ -28,6 +28,8 @@ $(OBJ)%$(O_X) : $(SRC)%$(C_X) $(SRC)%.$(H_X)
 $(OBJ)%$(O_X) : $(SRC)%$(C_X)
 	$(GCC) $(FLAGS) -c $< -o $@
 
+.PHONY : doc
+
 doc :
 	doxygen doc/doxyfile.doxy
 
@@ -38,4 +40,4 @@ clean :
 	rm -rvf $(OBJ)*$(O_X)
 
 superclean : clean
-	rm -rvf $(BIN) $(OBJ)
+	rm -rvf $(BIN) $(OBJ) doc/html doc/latex

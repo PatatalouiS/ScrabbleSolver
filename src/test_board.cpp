@@ -19,9 +19,7 @@ int main(int argc, char** argv) {
     Solver solver(gaddag, options.suzette_check, options.jokers);
 
     if(options.loop) {
-        while(true) {
-            solver.solveFromScratch();
-        }
+        solver.solveFromScratch();
     }
     else {
         // Load the Scrabble config in the File

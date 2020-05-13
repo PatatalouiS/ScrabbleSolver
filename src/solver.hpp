@@ -174,6 +174,7 @@ class Solver {
     /// \param params The actual SearchingParams
     /// \param candidate the letter we want to play, but who could build another word
     /// \param board The ScrabbleBoard used.
+    /// \param jokerUsed a flag to signal if the candidate letter is played as a joker
     /// \return an optional type. if a bad orthogonal word is detected, we return nullopt.
     ///     else, if no orthogonal word is detected or if the orthogonal word is valid, returns
     ///     the additionnal score of this orthogonal word. (0 is no word detected).
@@ -181,7 +182,8 @@ class Solver {
     std::optional<unsigned int> checkOtherWords(
                          const SearchingParams& params,
                          const unsigned char candidate,
-                         const Board& board);
+                         const Board& board,
+                         const bool jokerUsed = false);
     ///
     /// \brief this Method is used to follow a forced root during the search process
     ///     (When current SpotPos is not an empty Spot)
