@@ -49,7 +49,7 @@ Three options are available with command line args :
 
 <h4>⚠️ Activation of the <code><b>--suzette-check</b></code> option </h4>
 As explained, you must pass the Firewall of UCBL1 to keep the Suzette asserts working. If you are already physically on the University campus, you don't need to run the script. Else, just run the
-script <code><b>suzetteconnect.sh</b></code>, <b>( and don't forget to pass tour UCLB1 login at first arg )</b> on another console window. After, you can use <code><b>--suzette-check</b></code> as you want. run this script from the root of the project with :<br>
+script <code><b>suzetteconnect.sh</b></code>, <b>( and don't forget to pass tour UCLB1 login at first arg )</b> on another console window. After, you can use <code><b>--suzette-check</b></code> as you want. run this script from the root of the project with the command:<br>
 <pre>$ sh suzetteconnect.sh [p1234567]  <i>//Your UCBL1 login</i></pre> 
 
 This script is going to ask you a password for authenticate you at UCBL. The password to enter is your UCBL1 password.
