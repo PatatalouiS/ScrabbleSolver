@@ -1,8 +1,4 @@
-<img src='https://portraitsdefemmes.files.wordpress.com/2012/10/logo-ucbl.jpg?w=755' width='300'/> 
 <h1> Introduction </h1>
-
-<p>This project is an automatic Scrabble solver. It was realized for the LIFAP6 UE at UCBL1.<br>
-To get the base project and all the statements follow <a href="https://forge.univ-lyon1.fr/lifap6/scrabble-etu">THIS LINK</a><p>
 
 <h4>⚠️ Please read entirely the Instructions for build the project and be aware of all the available options ️⚠️ </h4>
 
